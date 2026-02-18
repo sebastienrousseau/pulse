@@ -1,7 +1,19 @@
-"""Pulse - Ecosystem health monitoring."""
+"""Pulse - Ecosystem health monitoring and dashboard.
 
-__version__ = "0.1.0"
+A comprehensive monitoring solution for tracking repository health,
+dependency vulnerabilities, and quality metrics across the ecosystem.
+"""
 
-from .monitor import EcosystemMonitor
+__version__ = "0.0.1"
 
-__all__ = ["EcosystemMonitor"]
+from pulse.config import PulseConfig
+from pulse.models import RepoHealth, SecurityAlert, VulnerabilityReport
+from pulse.monitor import EcosystemMonitor
+
+__all__ = [
+    "EcosystemMonitor",
+    "PulseConfig",
+    "RepoHealth",
+    "SecurityAlert",
+    "VulnerabilityReport",
+]
