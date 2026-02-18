@@ -12,7 +12,6 @@ from pulse.config import PulseConfig
 from pulse.models import (
     BuildStatus,
     CIStatus,
-    DependencyInfo,
     HealthStatus,
     Language,
     RepoHealth,

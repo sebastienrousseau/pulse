@@ -4,8 +4,6 @@ import os
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from pulse.config import PulseConfig, generate_default_config
 
 

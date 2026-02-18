@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
 from pulse.config import PulseConfig
-from pulse.github import GitHubClient, GitHubAPIError, RateLimitExceeded
+from pulse.github import GitHubAPIError, GitHubClient, RateLimitExceeded
 from pulse.models import EcosystemSummary, HealthStatus, RepoHealth
 
 
@@ -166,7 +165,7 @@ class EcosystemMonitor:
                         raise MonitorError(
                             f"Rate limit exceeded. Resets at: {e.reset_at}"
                         ) from e
-                    except GitHubAPIError as e:
+                    except GitHubAPIError:
                         # Log error but continue with other repos
                         health = RepoHealth(
                             name=repo_name,
@@ -372,15 +371,15 @@ class EcosystemMonitor:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         lines = [
-            f"# Ecosystem Health Report",
-            f"",
+            "# Ecosystem Health Report",
+            "",
             f"**Organization:** {self._summary.organization}",
             f"**Generated:** {self._summary.generated_at.strftime('%Y-%m-%d %H:%M:%S')}",
-            f"",
-            f"## Summary",
-            f"",
-            f"| Metric | Value |",
-            f"|--------|-------|",
+            "",
+            "## Summary",
+            "",
+            "| Metric | Value |",
+            "|--------|-------|",
             f"| Total Repositories | {self._summary.total_repos} |",
             f"| Healthy | {self._summary.healthy_count} |",
             f"| Warning | {self._summary.warning_count} |",
@@ -389,11 +388,11 @@ class EcosystemMonitor:
             f"| Total Stars | {self._summary.total_stars} |",
             f"| Open Issues | {self._summary.total_open_issues} |",
             f"| Vulnerabilities | {self._summary.total_vulnerabilities} |",
-            f"",
-            f"## Repository Details",
-            f"",
-            f"| Repository | Status | Score | Build | Vulns |",
-            f"|------------|--------|-------|-------|-------|",
+            "",
+            "## Repository Details",
+            "",
+            "| Repository | Status | Score | Build | Vulns |",
+            "|------------|--------|-------|-------|-------|",
         ]
 
         for repo in sorted(self._summary.repos, key=lambda r: -r.score):
@@ -420,9 +419,9 @@ class EcosystemMonitor:
         if critical:
             lines.extend(
                 [
-                    f"",
-                    f"## Critical Issues",
-                    f"",
+                    "",
+                    "## Critical Issues",
+                    "",
                 ]
             )
             for repo in critical:
@@ -433,9 +432,9 @@ class EcosystemMonitor:
         if vulnerable:
             lines.extend(
                 [
-                    f"",
-                    f"## Security Vulnerabilities",
-                    f"",
+                    "",
+                    "## Security Vulnerabilities",
+                    "",
                 ]
             )
             for repo in vulnerable:

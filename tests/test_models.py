@@ -2,8 +2,6 @@
 
 from datetime import datetime, timedelta
 
-import pytest
-
 from pulse.models import (
     BuildStatus,
     EcosystemSummary,

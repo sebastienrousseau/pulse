@@ -3,7 +3,6 @@
 import pytest
 
 from pulse.config import PulseConfig
-from pulse.models import HealthStatus
 from pulse.monitor import EcosystemMonitor
 
 
