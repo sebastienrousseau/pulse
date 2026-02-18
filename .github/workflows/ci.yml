@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+    branches: [main, "feat/**"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Python CI
+    uses: sebastienrousseau/pipelines/.github/workflows/python-ci.yml@main
+    with:
+      python-version: '3.11'
+      run-ruff: true
+      run-mypy: true
+      coverage-threshold: 80
+      package-manager: 'pip'
+    secrets: inherit
