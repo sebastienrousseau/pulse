@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pulse-monitor"
+version = "0.1.0"
+description = "Ecosystem health monitoring and metrics"
+authors = [{name = "Sebastien Rousseau", email = "sebastian.rousseau@gmail.com"}]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "httpx>=0.24",
+    "rich>=13.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "ruff"]
