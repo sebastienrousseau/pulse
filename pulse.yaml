@@ -1,0 +1,36 @@
+# Pulse Ecosystem Monitor Configuration
+# Generated: 2026-02-18
+
+github:
+  organization: sebastienrousseau
+  api_url: https://api.github.com
+
+monitoring:
+  scan_interval_minutes: 60
+  include_archived: false
+  include_forks: false
+  include_private: true
+  languages:
+    - rust
+    - python
+    - javascript
+    - typescript
+    - shell
+    - html
+
+alerts:
+  enabled: true
+  alert_on_critical: true
+  alert_on_build_failure: true
+  alert_on_vulnerability: true
+
+dashboard:
+  output_dir: ./dashboard
+  theme: dark
+  refresh_interval_seconds: 300
+
+cache:
+  enabled: true
+  directory: ~/.cache/pulse
+  ttl_seconds: 3600
+  max_size_mb: 100

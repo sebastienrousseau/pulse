@@ -147,7 +147,9 @@ class GitHubClient:
         return response.json()
 
     async def get_repositories(self) -> list[dict[str, Any]]:
-        """Get all repositories for the organization.
+        """Get all repositories for the organization or user.
+
+        Tries organization endpoint first, falls back to user endpoint.
 
         Returns:
             List of repository data.
@@ -157,10 +159,21 @@ class GitHubClient:
         page = 1
         per_page = 100
 
+        # Try org endpoint first, fall back to user endpoint
+        endpoint = f"/orgs/{org}/repos"
+        try:
+            await self._request("GET", endpoint, params={"per_page": 1})
+        except GitHubAPIError as e:
+            if e.status_code == 404:
+                # Not an org, try user endpoint
+                endpoint = f"/users/{org}/repos"
+            else:
+                raise
+
         while True:
             data = await self._request(
                 "GET",
-                f"/orgs/{org}/repos",
+                endpoint,
                 params={"page": page, "per_page": per_page, "type": "all"},
             )
 
@@ -415,6 +428,14 @@ class GitHubClient:
         if isinstance(alerts_data, list):
             alerts = []
             for alert in alerts_data:
+                # Safely extract patched version
+                first_patched = alert.get("security_vulnerability", {}).get("first_patched_version")
+                patched_version = first_patched.get("identifier") if first_patched else None
+
+                # Safely extract advisory URL
+                references = alert.get("security_advisory", {}).get("references", [])
+                advisory_url = references[0].get("url") if references else None
+
                 security_alert = SecurityAlert(
                     id=str(alert.get("number", "")),
                     package=alert.get("dependency", {}).get("package", {}).get("name", "unknown"),
@@ -424,10 +445,8 @@ class GitHubClient:
                     title=alert.get("security_advisory", {}).get("summary", ""),
                     description=alert.get("security_advisory", {}).get("description", ""),
                     cve_id=alert.get("security_advisory", {}).get("cve_id"),
-                    patched_version=alert.get("security_vulnerability", {}).get(
-                        "first_patched_version", {}
-                    ).get("identifier"),
-                    advisory_url=alert.get("security_advisory", {}).get("references", [{}])[0].get("url") if alert.get("security_advisory", {}).get("references") else None,
+                    patched_version=patched_version,
+                    advisory_url=advisory_url,
                     created_at=self._parse_datetime(alert.get("created_at")),
                 )
                 alerts.append(security_alert)

@@ -159,11 +159,13 @@ class PulseConfig(BaseModel):
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
     def get_github_token(self) -> str | None:
-        """Get GitHub token from config or environment.
+        """Get GitHub token from config, environment, or gh CLI.
 
         Returns:
             GitHub token or None if not configured.
         """
+        import subprocess
+
         # Config takes precedence
         if self.github.token:
             return self.github.token
@@ -173,6 +175,19 @@ class PulseConfig(BaseModel):
             token = os.environ.get(env_var)
             if token:
                 return token
+
+        # Fall back to gh CLI auth token
+        try:
+            result = subprocess.run(
+                ["gh", "auth", "token"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip()
+        except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+            pass
 
         return None
 

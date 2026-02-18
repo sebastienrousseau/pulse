@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
+    <title>Pulse - Ecosystem Health Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eaeaea;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: #888; margin-bottom: 2rem; }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .card-value { font-size: 2.5rem; font-weight: bold; }
+        .card-label { color: #888; margin-top: 0.5rem; }
+        .healthy { color: #4caf50; }
+        .warning { color: #ff9800; }
+        .critical { color: #f44336; }
+        .section { margin-bottom: 2rem; }
+        .section-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #0f3460;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #16213e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td { padding: 1rem; text-align: left; }
+        th { background: #0f3460; font-weight: 600; }
+        tr:hover { background: rgba(255,255,255,0.05); }
+        .progress-bar {
+            height: 20px;
+            background: #0f3460;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f44336, #ff9800, #4caf50);
+            transition: width 0.3s ease;
+        }
+        .lang-bar {
+            display: flex;
+            height: 30px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        .lang-segment { display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; }
+        footer { text-align: center; padding: 2rem; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pulse Dashboard</h1>
+        <p class="subtitle">Ecosystem health monitoring for sebastienrousseau</p>
+
+        <div class="cards">
+            <div class="card">
+                <div class="card-value">85</div>
+                <div class="card-label">Total Repositories</div>
+            </div>
+            <div class="card">
+                <div class="card-value healthy">7</div>
+                <div class="card-label">Healthy</div>
+            </div>
+            <div class="card">
+                <div class="card-value warning">53</div>
+                <div class="card-label">Warning</div>
+            </div>
+            <div class="card">
+                <div class="card-value critical">25</div>
+                <div class="card-label">Critical</div>
+            </div>
+            <div class="card">
+                <div class="card-value">56</div>
+                <div class="card-label">Avg Score</div>
+            </div>
+            <div class="card">
+                <div class="card-value">151</div>
+                <div class="card-label">Vulnerabilities</div>
+            </div>
+            <div class="card">
+                <div class="card-value">447</div>
+                <div class="card-label">Total Stars</div>
+            </div>
+            <div class="card">
+                <div class="card-value">257</div>
+                <div class="card-label">Open Issues</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Health Distribution</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 8.235294117647058%;"></div>
+            </div>
+            <p>8.2% of repositories are healthy</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Repository Details</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Repository</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Language</th>
+                        <th>Build</th>
+                        <th>Vulns</th>
+                        <th>Stars</th>
+                        <th>Issues</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/dotfiles.github.io" target="_blank" style="color: #eaeaea;">dotfiles.github.io</a></td>
+                    <td><span style="color: #4caf50;">●</span> healthy</td>
+                    <td>95</td>
+                    <td>shell</td>
+                    <td>passing</td>
+                    <td>0</td>
+                    <td>23</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/password-generator" target="_blank" style="color: #eaeaea;">password-generator</a></td>
+                    <td><span style="color: #4caf50;">●</span> healthy</td>
+                    <td>95</td>
+                    <td>javascript</td>
+                    <td>passing</td>
+                    <td>0</td>
+                    <td>21</td>
+                    <td>13</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/staticdatagen" target="_blank" style="color: #eaeaea;">staticdatagen</a></td>
+                    <td><span style="color: #4caf50;">●</span> healthy</td>
+                    <td>90</td>
+                    <td>rust</td>
+                    <td>passing</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>2</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/pain001" target="_blank" style="color: #eaeaea;">pain001</a></td>
+                    <td><span style="color: #4caf50;">●</span> healthy</td>
+                    <td>86</td>
+                    <td>python</td>
+                    <td>passing</td>
+                    <td>1</td>
+                    <td>37</td>
+                    <td>31</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/kura.pro" target="_blank" style="color: #eaeaea;">kura.pro</a></td>
+                    <td><span style="color: #4caf50;">●</span> healthy</td>
+                    <td>85</td>
+                    <td>other</td>
+                    <td>passing</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/pain" target="_blank" style="color: #eaeaea;">pain</a></td>
+                    <td><span style="color: #4caf50;">●</span> healthy</td>
+                    <td>85</td>
+                    <td>rust</td>
+                    <td>passing</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>2</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/skeletonic-docs" target="_blank" style="color: #eaeaea;">skeletonic-docs</a></td>
+                    <td><span style="color: #4caf50;">●</span> healthy</td>
+                    <td>85</td>
+                    <td>shell</td>
+                    <td>passing</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>3</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/codex" target="_blank" style="color: #eaeaea;">codex</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>75</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/commons" target="_blank" style="color: #eaeaea;">commons</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>75</td>
+                    <td>rust</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/devkit" target="_blank" style="color: #eaeaea;">devkit</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>75</td>
+                    <td>shell</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/pulse" target="_blank" style="color: #eaeaea;">pulse</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>75</td>
+                    <td>python</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/crypto-service" target="_blank" style="color: #eaeaea;">crypto-service</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>71</td>
+                    <td>typescript</td>
+                    <td>passing</td>
+                    <td>2</td>
+                    <td>7</td>
+                    <td>9</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/rssgen" target="_blank" style="color: #eaeaea;">rssgen</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>70</td>
+                    <td>rust</td>
+                    <td>passing</td>
+                    <td>0</td>
+                    <td>8</td>
+                    <td>4</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/talkwave" target="_blank" style="color: #eaeaea;">talkwave</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>68</td>
+                    <td>python</td>
+                    <td>passing</td>
+                    <td>3</td>
+                    <td>3</td>
+                    <td>7</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/ai-pay" target="_blank" style="color: #eaeaea;">ai-pay</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>65</td>
+                    <td>rust</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/audioanalyser" target="_blank" style="color: #eaeaea;">audioanalyser</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>65</td>
+                    <td>html</td>
+                    <td>passing</td>
+                    <td>39</td>
+                    <td>6</td>
+                    <td>7</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/dotfiles" target="_blank" style="color: #eaeaea;">dotfiles</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>65</td>
+                    <td>shell</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>61</td>
+                    <td>9</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/sine-wave-generator" target="_blank" style="color: #eaeaea;">sine-wave-generator</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>64</td>
+                    <td>html</td>
+                    <td>failing</td>
+                    <td>2</td>
+                    <td>16</td>
+                    <td>2</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/wiserone" target="_blank" style="color: #eaeaea;">wiserone</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>62</td>
+                    <td>rust</td>
+                    <td>passing</td>
+                    <td>6</td>
+                    <td>2</td>
+                    <td>7</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/akande.github.io" target="_blank" style="color: #eaeaea;">akande.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/alienstudio.github.io" target="_blank" style="color: #eaeaea;">alienstudio.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/audioanalyser.github.io" target="_blank" style="color: #eaeaea;">audioanalyser.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/bankingonai.github.io" target="_blank" style="color: #eaeaea;">bankingonai.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/bankingonquantum.github.io" target="_blank" style="color: #eaeaea;">bankingonquantum.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/bankstatementparser.github.io" target="_blank" style="color: #eaeaea;">bankstatementparser.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/beonux-builder" target="_blank" style="color: #eaeaea;">beonux-builder</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/cs50x.github.io" target="_blank" style="color: #eaeaea;">cs50x.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/dttlib.github.io" target="_blank" style="color: #eaeaea;">dttlib.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/hshlib.github.io" target="_blank" style="color: #eaeaea;">hshlib.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/kaishi.github.io" target="_blank" style="color: #eaeaea;">kaishi.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/kyberlib.github.io" target="_blank" style="color: #eaeaea;">kyberlib.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/l90s.github.io" target="_blank" style="color: #eaeaea;">l90s.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/langweave" target="_blank" style="color: #eaeaea;">langweave</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>3</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/mini-functions.github.io" target="_blank" style="color: #eaeaea;">mini-functions.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>shell</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/open-sans" target="_blank" style="color: #eaeaea;">open-sans</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/pain001.github.io" target="_blank" style="color: #eaeaea;">pain001.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/password-generator-pro.github.io" target="_blank" style="color: #eaeaea;">password-generator-pro.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>shell</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/pipelines" target="_blank" style="color: #eaeaea;">pipelines</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>other</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/rust-password-generator" target="_blank" style="color: #eaeaea;">rust-password-generator</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/rustlogs.github.io" target="_blank" style="color: #eaeaea;">rustlogs.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/sebastienrousseau.github.io" target="_blank" style="color: #eaeaea;">sebastienrousseau.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/shokunin.github.io" target="_blank" style="color: #eaeaea;">shokunin.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/vrdlib.github.io" target="_blank" style="color: #eaeaea;">vrdlib.github.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>60</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/skeletonic.io" target="_blank" style="color: #eaeaea;">skeletonic.io</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>59</td>
+                    <td>html</td>
+                    <td>unknown</td>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/audiotextpro" target="_blank" style="color: #eaeaea;">audiotextpro</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/c8-config" target="_blank" style="color: #eaeaea;">c8-config</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>javascript</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/eslint-config" target="_blank" style="color: #eaeaea;">eslint-config</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>javascript</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/jsdoc-config" target="_blank" style="color: #eaeaea;">jsdoc-config</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>javascript</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/llmkey" target="_blank" style="color: #eaeaea;">llmkey</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/markdownlint-config" target="_blank" style="color: #eaeaea;">markdownlint-config</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>javascript</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/mocha-config" target="_blank" style="color: #eaeaea;">mocha-config</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>javascript</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/northlondonboxingtraining.com" target="_blank" style="color: #eaeaea;">northlondonboxingtraining.com</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>python</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/payment-initiation" target="_blank" style="color: #eaeaea;">payment-initiation</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/prettier-config" target="_blank" style="color: #eaeaea;">prettier-config</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>javascript</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/remark-config" target="_blank" style="color: #eaeaea;">remark-config</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>javascript</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/rust-lib-template" target="_blank" style="color: #eaeaea;">rust-lib-template</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/xmlschema" target="_blank" style="color: #eaeaea;">xmlschema</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>rust</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/zwift" target="_blank" style="color: #eaeaea;">zwift</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>55</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/akande" target="_blank" style="color: #eaeaea;">akande</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>52</td>
+                    <td>python</td>
+                    <td>failing</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>2</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/maccfg" target="_blank" style="color: #eaeaea;">maccfg</a></td>
+                    <td><span style="color: #ff9800;">●</span> warning</td>
+                    <td>52</td>
+                    <td>shell</td>
+                    <td>unknown</td>
+                    <td>2</td>
+                    <td>9</td>
+                    <td>2</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/shokunin" target="_blank" style="color: #eaeaea;">shokunin</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>49</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>9</td>
+                    <td>44</td>
+                    <td>11</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/ImageBank" target="_blank" style="color: #eaeaea;">ImageBank</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>45</td>
+                    <td>other</td>
+                    <td>unknown</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/cmn" target="_blank" style="color: #eaeaea;">cmn</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>4</td>
+                    <td>5</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/frontmatter-gen" target="_blank" style="color: #eaeaea;">frontmatter-gen</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>3</td>
+                    <td>3</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/html-generator" target="_blank" style="color: #eaeaea;">html-generator</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>5</td>
+                    <td>6</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/http-handle" target="_blank" style="color: #eaeaea;">http-handle</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>10</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/mdx-gen" target="_blank" style="color: #eaeaea;">mdx-gen</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>5</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/metadata-gen" target="_blank" style="color: #eaeaea;">metadata-gen</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>4</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/mini-functions" target="_blank" style="color: #eaeaea;">mini-functions</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>14</td>
+                    <td>6</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/nalufx" target="_blank" style="color: #eaeaea;">nalufx</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>7</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/nucleusflow" target="_blank" style="color: #eaeaea;">nucleusflow</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>2</td>
+                    <td>5</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/pm2md" target="_blank" style="color: #eaeaea;">pm2md</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>typescript</td>
+                    <td>unknown</td>
+                    <td>11</td>
+                    <td>3</td>
+                    <td>3</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/sitemap-gen" target="_blank" style="color: #eaeaea;">sitemap-gen</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>5</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/staticweaver" target="_blank" style="color: #eaeaea;">staticweaver</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>0</td>
+                    <td>1</td>
+                    <td>3</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/audiotext" target="_blank" style="color: #eaeaea;">audiotext</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>python</td>
+                    <td>failing</td>
+                    <td>1</td>
+                    <td>0</td>
+                    <td>3</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/qrc" target="_blank" style="color: #eaeaea;">qrc</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>40</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>1</td>
+                    <td>9</td>
+                    <td>7</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/dtt" target="_blank" style="color: #eaeaea;">dtt</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>39</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>1</td>
+                    <td>6</td>
+                    <td>8</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/libmake" target="_blank" style="color: #eaeaea;">libmake</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>39</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>1</td>
+                    <td>30</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/hsh" target="_blank" style="color: #eaeaea;">hsh</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>38</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>3</td>
+                    <td>19</td>
+                    <td>8</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/password-generator-pro" target="_blank" style="color: #eaeaea;">password-generator-pro</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>35</td>
+                    <td>rust</td>
+                    <td>unknown</td>
+                    <td>26</td>
+                    <td>6</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/kyberlib" target="_blank" style="color: #eaeaea;">kyberlib</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>33</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>5</td>
+                    <td>41</td>
+                    <td>11</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/vrd" target="_blank" style="color: #eaeaea;">vrd</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>33</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>5</td>
+                    <td>3</td>
+                    <td>8</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/xtasks" target="_blank" style="color: #eaeaea;">xtasks</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>33</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>5</td>
+                    <td>5</td>
+                    <td>9</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/rlg" target="_blank" style="color: #eaeaea;">rlg</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>29</td>
+                    <td>rust</td>
+                    <td>failing</td>
+                    <td>9</td>
+                    <td>3</td>
+                    <td>10</td>
+                </tr>
+            
+                <tr>
+                    <td><a href="https://github.com/sebastienrousseau/bankstatementparser" target="_blank" style="color: #eaeaea;">bankstatementparser</a></td>
+                    <td><span style="color: #f44336;">●</span> critical</td>
+                    <td>25</td>
+                    <td>python</td>
+                    <td>failing</td>
+                    <td>16</td>
+                    <td>10</td>
+                    <td>4</td>
+                </tr>
+            
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            Generated by Pulse v0.0.1 at 2026-02-18 12:53:10
+        </footer>
+    </div>
+</body>
+</html>
