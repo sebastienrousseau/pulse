@@ -1,7 +1,7 @@
 """Tests for trends module."""
 
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -215,7 +215,7 @@ class TestTrendStore:
 
     def test_load_with_time_range(self, store: TrendStore) -> None:
         """Test loading with time filters."""
-        now = datetime.now()
+        now = datetime.now(tz=timezone.utc)
 
         # Create summary with custom timestamp
         summary = EcosystemSummary(organization="test-org")
@@ -295,7 +295,7 @@ class TestTrendStore:
         """Test cleanup of old data."""
         # Save old entry
         summary = EcosystemSummary(organization="test-org")
-        summary.generated_at = datetime.now() - timedelta(days=400)
+        summary.generated_at = datetime.now(tz=timezone.utc) - timedelta(days=400)
         store.save_summary(summary)
 
         # Save recent entry
@@ -327,7 +327,7 @@ class TestTrendAnalyzer:
         # Add historical data
         for i in range(10):
             summary = EcosystemSummary(organization="test-org")
-            summary.generated_at = datetime.now() - timedelta(days=9 - i)
+            summary.generated_at = datetime.now(tz=timezone.utc) - timedelta(days=9 - i)
             summary.total_repos = 10
             summary.healthy_count = 5 + i // 2
             summary.warning_count = 3
@@ -370,7 +370,7 @@ class TestTrendAnalyzer:
             store.save_repo_data(
                 "test-org",
                 [repo],
-                timestamp=datetime.now() - timedelta(days=4 - i),
+                timestamp=datetime.now(tz=timezone.utc) - timedelta(days=4 - i),
             )
 
         analyzer = TrendAnalyzer(store)
@@ -427,7 +427,7 @@ class TestTrendAnalyzer:
             store.save_repo_data(
                 "test-org",
                 [repo],
-                timestamp=datetime.now() - timedelta(days=len(scores) - i),
+                timestamp=datetime.now(tz=timezone.utc) - timedelta(days=len(scores) - i),
             )
 
         analyzer = TrendAnalyzer(store)
@@ -465,7 +465,7 @@ class TestTrendAnalyzer:
             store.save_repo_data(
                 "test-org",
                 [repo],
-                timestamp=datetime.now() - timedelta(days=len(statuses) - i),
+                timestamp=datetime.now(tz=timezone.utc) - timedelta(days=len(statuses) - i),
             )
 
         analyzer = TrendAnalyzer(store)

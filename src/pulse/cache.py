@@ -8,14 +8,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import time
-from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 from pulse.config import CacheConfig
 
 T = TypeVar("T")
+
+_MISSING = object()
 
 
 class CacheError(Exception):
@@ -44,7 +49,7 @@ class CacheEntry:
         """
         self.key = key
         self.data = data
-        self.created_at = created_at or datetime.now()
+        self.created_at = created_at or datetime.now(tz=timezone.utc)
         self.ttl_seconds = ttl_seconds
 
     @property
@@ -55,12 +60,12 @@ class CacheEntry:
     @property
     def is_expired(self) -> bool:
         """Check if entry is expired."""
-        return datetime.now() > self.expires_at
+        return datetime.now(tz=timezone.utc) > self.expires_at
 
     @property
     def age_seconds(self) -> float:
         """Get age in seconds."""
-        return (datetime.now() - self.created_at).total_seconds()
+        return (datetime.now(tz=timezone.utc) - self.created_at).total_seconds()
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize to dictionary."""
@@ -180,7 +185,8 @@ class ResponseCache:
             self._stats.hits += 1
             return entry.data
 
-        except (json.JSONDecodeError, KeyError, OSError):
+        except (json.JSONDecodeError, KeyError, OSError) as e:
+            logger.debug("Cache read error for key %s: %s", key, e)
             self._stats.errors += 1
             path.unlink(missing_ok=True)
             return None
@@ -323,6 +329,43 @@ class ResponseCache:
 
         return removed
 
+    def get_with_sentinel(self, key: str) -> Any:
+        """Get cached value, using sentinel to distinguish miss from cached None.
+
+        Args:
+            key: Cache key.
+
+        Returns:
+            Cached data or _MISSING sentinel if not found/expired.
+        """
+        if not self.enabled:
+            return _MISSING
+
+        self._ensure_dir()
+        path = self._key_to_path(key)
+
+        if not path.exists():
+            self._stats.misses += 1
+            return _MISSING
+
+        try:
+            with open(path) as f:
+                entry = self._deserialize(f.read())
+
+            if entry.is_expired:
+                self._stats.expirations += 1
+                path.unlink(missing_ok=True)
+                return _MISSING
+
+            self._stats.hits += 1
+            return entry.data
+
+        except (json.JSONDecodeError, KeyError, OSError) as e:
+            logger.debug("Cache read error for key %s: %s", key, e)
+            self._stats.errors += 1
+            path.unlink(missing_ok=True)
+            return _MISSING
+
     async def get_or_fetch(
         self,
         key: str,
@@ -339,9 +382,8 @@ class ResponseCache:
         Returns:
             Cached or freshly fetched data.
         """
-        # Check cache first
-        cached = self.get(key)
-        if cached is not None:
+        cached = self.get_with_sentinel(key)
+        if cached is not _MISSING:
             return cached
 
         # Fetch fresh data
@@ -368,9 +410,8 @@ class ResponseCache:
         Returns:
             Cached or freshly fetched data.
         """
-        # Check cache first
-        cached = self.get(key)
-        if cached is not None:
+        cached = self.get_with_sentinel(key)
+        if cached is not _MISSING:
             return cached
 
         # Fetch fresh data

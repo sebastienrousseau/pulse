@@ -3,6 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 from pulse.config import PulseConfig, generate_default_config
 
@@ -69,7 +70,9 @@ class TestPulseConfig:
         for var in ["GITHUB_TOKEN", "GH_TOKEN", "PULSE_GITHUB_TOKEN"]:
             os.environ.pop(var, None)
 
-        assert config.get_github_token() is None
+        # Mock subprocess to prevent gh CLI fallback
+        with patch("subprocess.run", side_effect=FileNotFoundError):
+            assert config.get_github_token() is None
 
     def test_validate_github_config(self) -> None:
         """Test GitHub config validation."""
@@ -80,7 +83,8 @@ class TestPulseConfig:
         for var in ["GITHUB_TOKEN", "GH_TOKEN", "PULSE_GITHUB_TOKEN"]:
             os.environ.pop(var, None)
 
-        assert config.validate_github_config() is False
+        with patch("subprocess.run", side_effect=FileNotFoundError):
+            assert config.validate_github_config() is False
 
         config.github.token = "test-token"
         assert config.validate_github_config() is True

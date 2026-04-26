@@ -7,9 +7,10 @@ to identify trends and patterns over time.
 from __future__ import annotations
 
 import json
+import re
 import statistics
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -139,7 +140,7 @@ class RepoHistoricalDataPoint:
         from pulse.models import BuildStatus
 
         return cls(
-            timestamp=timestamp or datetime.now(),
+            timestamp=timestamp or datetime.now(tz=timezone.utc),
             repo_name=repo.name,
             score=repo.score,
             status=repo.status,
@@ -216,13 +217,21 @@ class TrendStore:
         """Ensure data directory exists."""
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _safe_org_name(org: str) -> str:
+        """Sanitize org name for filesystem use."""
+        safe = re.sub(r"[^a-zA-Z0-9_-]", "_", org)
+        if not safe or safe.startswith("."):
+            raise TrendError(f"Invalid organization name: {org}")
+        return safe
+
     def _summary_path(self, org: str) -> Path:
         """Get path for organization summary history."""
-        return self.data_dir / f"{org}_summary.jsonl"
+        return self.data_dir / f"{self._safe_org_name(org)}_summary.jsonl"
 
     def _repo_path(self, org: str) -> Path:
         """Get path for repository history."""
-        return self.data_dir / f"{org}_repos.jsonl"
+        return self.data_dir / f"{self._safe_org_name(org)}_repos.jsonl"
 
     def save_summary(self, summary: EcosystemSummary) -> None:
         """Save ecosystem summary to history.
@@ -249,7 +258,7 @@ class TrendStore:
             repos: List of repository health data.
             timestamp: Optional timestamp (defaults to now).
         """
-        ts = timestamp or datetime.now()
+        ts = timestamp or datetime.now(tz=timezone.utc)
         path = self._repo_path(org)
 
         with open(path, "a") as f:
@@ -355,7 +364,7 @@ class TrendStore:
         Returns:
             Number of entries removed.
         """
-        cutoff = datetime.now() - timedelta(days=keep_days)
+        cutoff = datetime.now(tz=timezone.utc) - timedelta(days=keep_days)
         removed = 0
 
         for path in [self._summary_path(org), self._repo_path(org)]:
@@ -413,7 +422,7 @@ class TrendAnalyzer:
         Returns:
             List of trend analyses for each metric.
         """
-        since = datetime.now() - timedelta(days=days)
+        since = datetime.now(tz=timezone.utc) - timedelta(days=days)
         history = self.store.load_summary_history(org, since=since)
 
         if len(history) < 2:
@@ -456,7 +465,7 @@ class TrendAnalyzer:
         Returns:
             List of trend analyses.
         """
-        since = datetime.now() - timedelta(days=days)
+        since = datetime.now(tz=timezone.utc) - timedelta(days=days)
         history = self.store.load_repo_history(org, repo_name, since=since)
 
         if len(history) < 2:
@@ -543,7 +552,7 @@ class TrendAnalyzer:
         Returns:
             Dictionary with percentile values.
         """
-        since = datetime.now() - timedelta(days=days)
+        since = datetime.now(tz=timezone.utc) - timedelta(days=days)
         history = self.store.load_repo_history(org, repo_name, since=since)
 
         scores = [p.score for p in history]
@@ -579,7 +588,7 @@ class TrendAnalyzer:
         Returns:
             List of (timestamp, status) tuples showing changes.
         """
-        since = datetime.now() - timedelta(days=days)
+        since = datetime.now(tz=timezone.utc) - timedelta(days=days)
         history = self.store.load_repo_history(org, repo_name, since=since)
 
         if not history:
@@ -611,7 +620,7 @@ class TrendAnalyzer:
         Returns:
             Comparison of metrics between periods.
         """
-        now = datetime.now()
+        now = datetime.now(tz=timezone.utc)
         period1_start = now - timedelta(days=period1_days)
         period2_start = now - timedelta(days=period1_days + period2_days)
         period2_end = period1_start
@@ -667,12 +676,12 @@ class TrendAnalyzer:
         """
         trends = self.analyze_summary_trends(org, days)
         comparison = self.compare_periods(org, days // 2, days // 2)
-        history = self.store.load_summary_history(org, since=datetime.now() - timedelta(days=days))
+        history = self.store.load_summary_history(org, since=datetime.now(tz=timezone.utc) - timedelta(days=days))
 
         return {
             "organization": org,
             "analysis_period_days": days,
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(tz=timezone.utc).isoformat(),
             "data_points": len(history),
             "trends": [t.to_dict() for t in trends],
             "period_comparison": comparison,

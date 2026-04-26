@@ -5,9 +5,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+ALLOWED_API_HOSTS = frozenset({"api.github.com"})
 
 
 class GitHubConfig(BaseModel):
@@ -21,6 +24,20 @@ class GitHubConfig(BaseModel):
     rate_limit_buffer: int = Field(
         default=100, description="Buffer to maintain before rate limit"
     )
+
+    @field_validator("api_url")
+    @classmethod
+    def validate_api_url(cls, v: str) -> str:
+        """Validate that api_url points to a trusted host over HTTPS."""
+        parsed = urlparse(v)
+        if parsed.scheme != "https":
+            raise ValueError("API URL must use HTTPS")
+        if parsed.hostname not in ALLOWED_API_HOSTS:
+            raise ValueError(
+                f"Untrusted API host: {parsed.hostname}. "
+                f"Allowed: {', '.join(sorted(ALLOWED_API_HOSTS))}"
+            )
+        return v
 
 
 class MonitoringConfig(BaseModel):

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -180,7 +180,11 @@ class RepoHealth(BaseModel):
     def days_since_commit(self) -> int | None:
         """Calculate days since last commit."""
         if self.last_commit:
-            delta = datetime.now() - self.last_commit.replace(tzinfo=None)
+            now = datetime.now(tz=timezone.utc)
+            commit = self.last_commit if self.last_commit.tzinfo else self.last_commit.replace(
+                tzinfo=timezone.utc
+            )
+            delta = now - commit
             return delta.days
         return None
 
@@ -258,7 +262,7 @@ class EcosystemSummary(BaseModel):
     average_score: float = 0.0
 
     # Timestamps
-    generated_at: datetime = Field(default_factory=datetime.now)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(tz=timezone.utc))
 
     # Repository list
     repos: list[RepoHealth] = Field(default_factory=list)

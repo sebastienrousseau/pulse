@@ -130,6 +130,7 @@ class TestEcosystemMonitor:
             "archived": False,
             "fork": True,
             "private": False,
+            "language": "Python",
         }
         assert monitor._should_include_repo(repo_data) is True
 
@@ -198,6 +199,7 @@ class TestEcosystemMonitorFiltering:
             "archived": False,
             "fork": False,
             "private": True,
+            "language": "Python",
         }
         assert monitor._should_include_repo(repo_data) is True
 
@@ -214,20 +216,20 @@ class TestEcosystemMonitorFiltering:
         assert monitor._should_include_repo(python_repo) is True
         assert monitor._should_include_repo(go_repo) is False
 
-    def test_should_include_no_language(self) -> None:
-        """Test repo with no language passes filter."""
+    def test_should_exclude_no_language(self) -> None:
+        """Test repo with no language is excluded by language filter."""
         monitor = EcosystemMonitor()
         monitor.config.monitoring.languages = ["rust"]
 
         repo_data = {"name": "repo", "language": None, "archived": False, "fork": False, "private": False}
-        assert monitor._should_include_repo(repo_data) is True
+        assert monitor._should_include_repo(repo_data) is False
 
     def test_should_include_archived_when_enabled(self) -> None:
         """Test archived inclusion when enabled."""
         monitor = EcosystemMonitor()
         monitor.config.monitoring.include_archived = True
 
-        repo_data = {"name": "archived-repo", "archived": True, "fork": False, "private": False}
+        repo_data = {"name": "archived-repo", "archived": True, "fork": False, "private": False, "language": "Rust"}
         assert monitor._should_include_repo(repo_data) is True
 
 

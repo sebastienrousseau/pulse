@@ -4,7 +4,7 @@ A comprehensive monitoring solution for tracking repository health,
 dependency vulnerabilities, and quality metrics across the ecosystem.
 """
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 
 from pulse.alerting import AlertEvent, AlertManager, SlackChannel
 from pulse.cache import MemoryCache, ResponseCache

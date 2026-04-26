@@ -113,13 +113,15 @@ class TestGitHubClient:
             old_tokens[var] = os.environ.pop(var, None)
 
         try:
-            config = PulseConfig()
-            config.github.token = None
-            client = GitHubClient(config)
+            # Mock subprocess to prevent gh CLI fallback
+            with patch("subprocess.run", side_effect=FileNotFoundError):
+                config = PulseConfig()
+                config.github.token = None
+                client = GitHubClient(config)
 
-            http_client = await client._ensure_client()
-            assert "Authorization" not in http_client.headers
-            await client.close()
+                http_client = await client._ensure_client()
+                assert "Authorization" not in http_client.headers
+                await client.close()
         finally:
             # Restore env vars
             for var, val in old_tokens.items():
@@ -253,11 +255,12 @@ class TestGitHubClient:
     @pytest.mark.asyncio
     async def test_get_repositories_pagination(self, client: GitHubClient) -> None:
         """Test repository pagination."""
+        probe = [{"name": "probe"}]  # probe request to detect org/user
         page1 = [{"name": f"repo{i}"} for i in range(100)]
         page2 = [{"name": f"repo{i}"} for i in range(100, 150)]
 
         with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-            mock_request.side_effect = [page1, page2]
+            mock_request.side_effect = [probe, page1, page2]
 
             result = await client.get_repositories()
             assert len(result) == 150

@@ -10,10 +10,14 @@ import csv
 import html
 import io
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from pulse import __version__
 from pulse.models import (
     BuildStatus,
     EcosystemSummary,
@@ -498,7 +502,7 @@ class JSONReporter(Reporter):
                 "generated_at": summary.generated_at.isoformat(),
                 "organization": summary.organization,
                 "generator": "pulse",
-                "version": "0.0.1",
+                "version": __version__,
             },
             "summary": {
                 "total_repos": summary.total_repos,

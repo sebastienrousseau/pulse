@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+import logging
+from datetime import datetime, timezone
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 import httpx
 
@@ -61,6 +64,13 @@ class GitHubClient:
         self._rate_limit_remaining: int = 5000
         self._rate_limit_reset: datetime | None = None
 
+    @staticmethod
+    def _get_version() -> str:
+        """Get package version."""
+        from pulse import __version__
+
+        return __version__
+
     async def __aenter__(self) -> GitHubClient:
         """Enter async context."""
         await self._ensure_client()
@@ -76,7 +86,7 @@ class GitHubClient:
             token = self.config.get_github_token()
             headers = {
                 "Accept": "application/vnd.github.v3+json",
-                "User-Agent": "Pulse-Ecosystem-Monitor/0.0.1",
+                "User-Agent": f"Pulse-Ecosystem-Monitor/{self._get_version()}",
             }
             if token:
                 headers["Authorization"] = f"Bearer {token}"
@@ -99,15 +109,21 @@ class GitHubClient:
         remaining = response.headers.get("X-RateLimit-Remaining")
         reset = response.headers.get("X-RateLimit-Reset")
 
-        if remaining:
-            self._rate_limit_remaining = int(remaining)
-        if reset:
-            self._rate_limit_reset = datetime.fromtimestamp(int(reset))
+        try:
+            if remaining:
+                self._rate_limit_remaining = int(remaining)
+            if reset:
+                self._rate_limit_reset = datetime.fromtimestamp(int(reset), tz=timezone.utc)
+        except (ValueError, OverflowError, OSError):
+            logger.debug("Failed to parse rate limit headers")
+
+    _MAX_RETRIES = 3
+    _RETRY_BACKOFF = 1.0  # seconds, doubled each retry
 
     async def _request(
         self, method: str, path: str, **kwargs: Any
     ) -> dict[str, Any] | list[Any]:
-        """Make API request with rate limit handling.
+        """Make API request with rate limit handling and retry.
 
         Args:
             method: HTTP method.
@@ -125,26 +141,52 @@ class GitHubClient:
         if self._rate_limit_remaining <= self.config.github.rate_limit_buffer:
             raise RateLimitExceeded(self._rate_limit_reset)
 
-        client = await self._ensure_client()
-        response = await client.request(method, path, **kwargs)
+        last_exc: Exception | None = None
+        for attempt in range(self._MAX_RETRIES):
+            try:
+                client = await self._ensure_client()
+                response = await client.request(method, path, **kwargs)
 
-        self._update_rate_limit(response)
+                self._update_rate_limit(response)
 
-        if response.status_code == 403:
-            if "rate limit" in response.text.lower():
-                raise RateLimitExceeded(self._rate_limit_reset)
-            raise GitHubAPIError(f"Forbidden: {response.text}", 403)
+                if response.status_code == 403:
+                    if "rate limit" in response.text.lower():
+                        raise RateLimitExceeded(self._rate_limit_reset)
+                    raise GitHubAPIError(f"Forbidden: {response.text}", 403)
 
-        if response.status_code == 404:
-            raise GitHubAPIError(f"Not found: {path}", 404)
+                if response.status_code == 404:
+                    raise GitHubAPIError(f"Not found: {path}", 404)
 
-        if response.status_code >= 400:
-            raise GitHubAPIError(
-                f"API error: {response.status_code} - {response.text}",
-                response.status_code,
-            )
+                # Retry on server errors
+                if response.status_code >= 500:
+                    last_exc = GitHubAPIError(
+                        f"Server error: {response.status_code} - {response.text}",
+                        response.status_code,
+                    )
+                    logger.warning(
+                        "Retryable server error %d on %s (attempt %d/%d)",
+                        response.status_code, path, attempt + 1, self._MAX_RETRIES,
+                    )
+                    await asyncio.sleep(self._RETRY_BACKOFF * (2**attempt))
+                    continue
 
-        return response.json()
+                if response.status_code >= 400:
+                    raise GitHubAPIError(
+                        f"API error: {response.status_code} - {response.text}",
+                        response.status_code,
+                    )
+
+                return response.json()
+
+            except httpx.RequestError as e:
+                last_exc = GitHubAPIError(f"Request failed: {e}")
+                logger.warning(
+                    "Retryable request error on %s (attempt %d/%d): %s",
+                    path, attempt + 1, self._MAX_RETRIES, e,
+                )
+                await asyncio.sleep(self._RETRY_BACKOFF * (2**attempt))
+
+        raise last_exc or GitHubAPIError(f"Request to {path} failed after retries")
 
     async def get_repositories(self) -> list[dict[str, Any]]:
         """Get all repositories for the organization or user.
@@ -180,7 +222,8 @@ class GitHubClient:
             if not data:
                 break
 
-            assert isinstance(data, list)
+            if not isinstance(data, list):
+                raise GitHubAPIError(f"Expected list response from {endpoint}")
             repos.extend(data)
 
             if len(data) < per_page:
@@ -205,7 +248,8 @@ class GitHubClient:
         """
         org = self.config.github.organization
         data = await self._request("GET", f"/repos/{org}/{repo_name}")
-        assert isinstance(data, dict)
+        if not isinstance(data, dict):
+            raise GitHubAPIError(f"Expected dict response for repo {repo_name}")
         return data
 
     async def get_latest_commit(self, repo_name: str, branch: str = "main") -> dict[str, Any] | None:
@@ -223,9 +267,11 @@ class GitHubClient:
             data = await self._request(
                 "GET", f"/repos/{org}/{repo_name}/commits/{branch}"
             )
-            assert isinstance(data, dict)
+            if not isinstance(data, dict):
+                return None
             return data
-        except GitHubAPIError:
+        except GitHubAPIError as e:
+            logger.debug("Failed to get latest commit for %s: %s", repo_name, e)
             return None
 
     async def get_workflow_runs(
@@ -247,9 +293,11 @@ class GitHubClient:
                 f"/repos/{org}/{repo_name}/actions/runs",
                 params={"per_page": limit},
             )
-            assert isinstance(data, dict)
+            if not isinstance(data, dict):
+                return []
             return data.get("workflow_runs", [])
-        except GitHubAPIError:
+        except GitHubAPIError as e:
+            logger.debug("Failed to get workflow runs for %s: %s", repo_name, e)
             return []
 
     async def get_vulnerability_alerts(self, repo_name: str) -> list[dict[str, Any]]:
@@ -263,14 +311,24 @@ class GitHubClient:
         """
         org = self.config.github.organization
         try:
-            data = await self._request(
-                "GET",
-                f"/repos/{org}/{repo_name}/dependabot/alerts",
-                params={"state": "open", "per_page": 100},
-            )
-            assert isinstance(data, list)
-            return data
-        except GitHubAPIError:
+            all_alerts: list[dict[str, Any]] = []
+            page = 1
+            per_page = 100
+            while True:
+                data = await self._request(
+                    "GET",
+                    f"/repos/{org}/{repo_name}/dependabot/alerts",
+                    params={"state": "open", "per_page": per_page, "page": page},
+                )
+                if not isinstance(data, list):
+                    break
+                all_alerts.extend(data)
+                if len(data) < per_page:
+                    break
+                page += 1
+            return all_alerts
+        except GitHubAPIError as e:
+            logger.debug("Failed to get vulnerability alerts for %s: %s", repo_name, e)
             return []
 
     async def get_releases(self, repo_name: str, limit: int = 1) -> list[dict[str, Any]]:
@@ -290,9 +348,11 @@ class GitHubClient:
                 f"/repos/{org}/{repo_name}/releases",
                 params={"per_page": limit},
             )
-            assert isinstance(data, list)
+            if not isinstance(data, list):
+                return []
             return data
-        except GitHubAPIError:
+        except GitHubAPIError as e:
+            logger.debug("Failed to get releases for %s: %s", repo_name, e)
             return []
 
     async def get_contents(self, repo_name: str, path: str) -> dict[str, Any] | None:
@@ -308,10 +368,11 @@ class GitHubClient:
         org = self.config.github.organization
         try:
             data = await self._request("GET", f"/repos/{org}/{repo_name}/contents/{path}")
-            assert isinstance(data, dict)
+            if not isinstance(data, (dict, list)):
+                return None
             return data
         except GitHubAPIError:
-            return None
+            return None  # Expected for missing files
 
     def _parse_datetime(self, dt_str: str | None) -> datetime | None:
         """Parse ISO datetime string."""
@@ -392,6 +453,9 @@ class GitHubClient:
             self.get_contents(repo_name, "README.md"),
             self.get_contents(repo_name, "LICENSE"),
             self.get_contents(repo_name, ".github/workflows"),
+            self.get_contents(repo_name, "tests"),
+            self.get_contents(repo_name, "test"),
+            self.get_contents(repo_name, "docs"),
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -459,7 +523,7 @@ class GitHubClient:
                 medium_count=sum(1 for a in alerts if a.severity == Severity.MEDIUM),
                 low_count=sum(1 for a in alerts if a.severity == Severity.LOW),
                 alerts=alerts,
-                last_scanned=datetime.now(),
+                last_scanned=datetime.now(tz=timezone.utc),
             )
 
         # Process releases
@@ -473,8 +537,11 @@ class GitHubClient:
         health.has_readme = results[4] is not None and not isinstance(results[4], Exception)
         health.has_license = results[5] is not None and not isinstance(results[5], Exception)
         health.has_ci = results[6] is not None and not isinstance(results[6], Exception)
-        health.has_tests = True  # Would need additional check
-        health.has_docs = health.has_readme
+        has_tests_dir = results[7] is not None and not isinstance(results[7], Exception)
+        has_test_dir = results[8] is not None and not isinstance(results[8], Exception)
+        health.has_tests = has_tests_dir or has_test_dir
+        has_docs_dir = results[9] is not None and not isinstance(results[9], Exception)
+        health.has_docs = has_docs_dir
 
         # Calculate overall health score
         health.calculate_score()
@@ -484,10 +551,8 @@ class GitHubClient:
             health.status = HealthStatus.HEALTHY
         elif health.score >= 50:
             health.status = HealthStatus.WARNING
-        elif health.score > 0:
-            health.status = HealthStatus.CRITICAL
         else:
-            health.status = HealthStatus.UNKNOWN
+            health.status = HealthStatus.CRITICAL
 
         return health
 

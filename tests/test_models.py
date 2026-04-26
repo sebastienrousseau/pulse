@@ -1,6 +1,6 @@
 """Tests for Pulse data models."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from pulse.models import (
     BuildStatus,
@@ -66,7 +66,7 @@ class TestRepoHealth:
             name="test",
             full_name="org/test",
             url="https://github.com/org/test",
-            last_commit=datetime.now() - timedelta(days=5),
+            last_commit=datetime.now(tz=timezone.utc) - timedelta(days=5),
         )
 
         assert health.days_since_commit == 5
@@ -139,7 +139,7 @@ class TestRepoHealth:
             name="test",
             full_name="org/test",
             url="https://github.com/org/test",
-            last_commit=datetime.now() - timedelta(days=10),
+            last_commit=datetime.now(tz=timezone.utc) - timedelta(days=10),
         )
 
         score = health.calculate_score()

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pulse"
-version = "0.0.1"
+version = "0.0.2"
 description = "Ecosystem monitoring and health dashboard for the Sebastien Rousseau repository ecosystem"
 authors = [{name = "Sebastien Rousseau", email = "sebastian.rousseau@gmail.com"}]
 license = "MIT OR Apache-2.0"

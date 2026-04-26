@@ -6,9 +6,13 @@ including Slack, email, and webhook integrations.
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import smtplib
 from abc import ABC, abstractmethod
-from datetime import datetime
+
+logger = logging.getLogger(__name__)
+from datetime import datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any
@@ -66,7 +70,7 @@ class AlertEvent:
         self.severity = severity
         self.repo = repo
         self.metadata = metadata or {}
-        self.timestamp = datetime.now()
+        self.timestamp = datetime.now(tz=timezone.utc)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -132,6 +136,13 @@ class SlackChannel(AlertChannel):
             webhook_url: Slack webhook URL.
         """
         self.webhook_url = webhook_url
+        self._client: httpx.AsyncClient | None = None
+
+    async def close(self) -> None:
+        """Close the HTTP client."""
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
 
     @property
     def name(self) -> str:
@@ -210,13 +221,10 @@ class SlackChannel(AlertChannel):
         )
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.webhook_url,
-                    json=payload,
-                    timeout=10.0,
-                )
-                return response.status_code == 200
+            if self._client is None or self._client.is_closed:
+                self._client = httpx.AsyncClient(timeout=10.0)
+            response = await self._client.post(self.webhook_url, json=payload)
+            return response.status_code == 200
         except httpx.RequestError:
             return False
 
@@ -228,20 +236,30 @@ class WebhookChannel(AlertChannel):
         self,
         url: str | None = None,
         headers: dict[str, str] | None = None,
+        channel_name: str | None = None,
     ) -> None:
         """Initialize webhook channel.
 
         Args:
             url: Webhook URL.
             headers: Custom headers.
+            channel_name: Optional unique channel name.
         """
         self.url = url
         self.headers = headers or {}
+        self._channel_name = channel_name or "webhook"
+        self._client: httpx.AsyncClient | None = None
+
+    async def close(self) -> None:
+        """Close the HTTP client."""
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
 
     @property
     def name(self) -> str:
         """Get channel name."""
-        return "webhook"
+        return self._channel_name
 
     def is_configured(self) -> bool:
         """Check if webhook is configured."""
@@ -262,14 +280,10 @@ class WebhookChannel(AlertChannel):
         payload = event.to_dict()
 
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.url,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=10.0,
-                )
-                return 200 <= response.status_code < 300
+            if self._client is None or self._client.is_closed:
+                self._client = httpx.AsyncClient(timeout=10.0, headers=self.headers)
+            response = await self._client.post(self.url, json=payload)
+            return 200 <= response.status_code < 300
         except httpx.RequestError:
             return False
 
@@ -327,14 +341,20 @@ class EmailChannel(AlertChannel):
         if not self.is_configured():
             return False
 
-        try:
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = f"[Pulse] {event.title}"
-            msg["From"] = self.from_email
-            msg["To"] = ", ".join(self.recipients)
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self._send_sync, event)
 
-            # Plain text version
-            text = f"""
+    def _build_email(self, event: AlertEvent) -> MIMEMultipart:
+        """Build email message from alert event."""
+        import html as html_mod
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"[Pulse] {event.title}"
+        msg["From"] = self.from_email
+        msg["To"] = ", ".join(self.recipients)
+
+        # Plain text version
+        text = f"""
 Pulse Alert: {event.title}
 
 {event.message}
@@ -342,46 +362,56 @@ Pulse Alert: {event.title}
 Severity: {event.severity}
 Time: {event.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
 """
-            if event.repo:
-                text += f"\nRepository: {event.repo.name} ({event.repo.url})"
+        if event.repo:
+            text += f"\nRepository: {event.repo.name} ({event.repo.url})"
 
-            # HTML version
-            severity_colors = {
-                "critical": "#dc3545",
-                "warning": "#ffc107",
-                "info": "#17a2b8",
-            }
-            color = severity_colors.get(event.severity, "#808080")
+        # HTML version
+        severity_colors = {
+            "critical": "#dc3545",
+            "warning": "#ffc107",
+            "info": "#17a2b8",
+        }
+        color = severity_colors.get(event.severity, "#808080")
 
-            html = f"""
+        escaped_title = html_mod.escape(event.title)
+        escaped_message = html_mod.escape(event.message)
+
+        html = f"""
 <html>
 <body style="font-family: Arial, sans-serif;">
     <div style="border-left: 4px solid {color}; padding-left: 16px;">
-        <h2 style="color: {color}; margin-bottom: 8px;">{event.title}</h2>
-        <p style="color: #333;">{event.message}</p>
+        <h2 style="color: {color}; margin-bottom: 8px;">{escaped_title}</h2>
+        <p style="color: #333;">{escaped_message}</p>
         <p style="color: #666; font-size: 12px;">
-            Severity: {event.severity.upper()}<br>
+            Severity: {html_mod.escape(event.severity.upper())}<br>
             Time: {event.timestamp.strftime("%Y-%m-%d %H:%M:%S")}
         </p>
     </div>
 """
-            if event.repo:
-                html += f"""
+        if event.repo:
+            escaped_name = html_mod.escape(event.repo.name)
+            escaped_url = html_mod.escape(event.repo.url)
+            html += f"""
     <p style="color: #666; margin-top: 16px;">
-        Repository: <a href="{event.repo.url}">{event.repo.name}</a>
+        Repository: <a href="{escaped_url}">{escaped_name}</a>
     </p>
 """
-            html += """
+        html += """
     <hr style="margin-top: 24px; border: none; border-top: 1px solid #ddd;">
     <p style="color: #999; font-size: 11px;">Sent by Pulse Ecosystem Monitor</p>
 </body>
 </html>
 """
 
-            msg.attach(MIMEText(text, "plain"))
-            msg.attach(MIMEText(html, "html"))
+        msg.attach(MIMEText(text, "plain"))
+        msg.attach(MIMEText(html, "html"))
+        return msg
 
-            # Send email
+    def _send_sync(self, event: AlertEvent) -> bool:
+        """Send email synchronously (runs in executor)."""
+        try:
+            msg = self._build_email(event)
+
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 if self.use_tls:
                     server.starttls()
@@ -438,6 +468,12 @@ class AlertManager:
         """Get recent event history."""
         return self._event_history[-self._max_history :]
 
+    async def close(self) -> None:
+        """Close all channel clients."""
+        for channel in self._channels:
+            if hasattr(channel, "close"):
+                await channel.close()
+
     def add_channel(self, channel: AlertChannel) -> None:
         """Add notification channel.
 
@@ -475,6 +511,8 @@ class AlertManager:
             return {}
 
         self._event_history.append(event)
+        if len(self._event_history) > self._max_history * 2:
+            self._event_history = self._event_history[-self._max_history :]
 
         results = {}
         for channel in self._channels:
@@ -482,6 +520,7 @@ class AlertManager:
                 success = await channel.send(event)
                 results[channel.name] = success
             except Exception:
+                logger.exception("Failed to send alert via %s", channel.name)
                 results[channel.name] = False
 
         return results
@@ -621,63 +660,23 @@ class AlertManager:
         Returns:
             List of events sent.
         """
-        events_sent = []
+        history_start = len(self._event_history)
 
         # Check each repository for alert conditions
         for repo in summary.repos:
-            # Critical status
             if repo.status == HealthStatus.CRITICAL:
                 await self.alert_critical(repo)
-                events_sent.append(
-                    AlertEvent(
-                        event_type=AlertEvent.CRITICAL_HEALTH,
-                        title=f"Critical: {repo.name}",
-                        message="",
-                        severity="critical",
-                        repo=repo,
-                    )
-                )
 
-            # Build failures
             if repo.latest_build == BuildStatus.FAILING:
                 await self.alert_build_failure(repo)
-                events_sent.append(
-                    AlertEvent(
-                        event_type=AlertEvent.BUILD_FAILURE,
-                        title=f"Build Failed: {repo.name}",
-                        message="",
-                        severity="warning",
-                        repo=repo,
-                    )
-                )
 
-            # Vulnerabilities
             if repo.vulnerability_report and repo.vulnerability_report.total_alerts > 0:
                 await self.alert_vulnerability(repo)
-                events_sent.append(
-                    AlertEvent(
-                        event_type=AlertEvent.VULNERABILITY,
-                        title=f"Security: {repo.name}",
-                        message="",
-                        severity="warning"
-                        if not repo.vulnerability_report.has_critical
-                        else "critical",
-                        repo=repo,
-                    )
-                )
 
         # Send scan complete summary
         await self.alert_scan_complete(summary)
-        events_sent.append(
-            AlertEvent(
-                event_type=AlertEvent.SCAN_COMPLETE,
-                title="Scan Complete",
-                message="",
-                severity="info",
-            )
-        )
 
-        return events_sent
+        return self._event_history[history_start:]
 
 
 class ConsoleChannel(AlertChannel):

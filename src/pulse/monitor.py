@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from pathlib import Path
 from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
 
 from pulse.config import PulseConfig
 from pulse.github import GitHubAPIError, GitHubClient, RateLimitExceeded
@@ -49,6 +52,7 @@ class EcosystemMonitor:
         self._client: GitHubClient | None = None
         self._summary: EcosystemSummary | None = None
         self._progress_callback: Callable[[str, int, int], None] | None = None
+        self._language_filter: frozenset[str] | None = None
 
     @property
     def organization(self) -> str:
@@ -120,8 +124,12 @@ class EcosystemMonitor:
 
         # Check language filter
         if monitoring.languages:
+            if self._language_filter is None:
+                self._language_filter = frozenset(
+                    lang.lower() for lang in monitoring.languages
+                )
             repo_lang = (repo_data.get("language") or "").lower()
-            if repo_lang and repo_lang not in [l.lower() for l in monitoring.languages]:
+            if not repo_lang or repo_lang not in self._language_filter:
                 return False
 
         return True
@@ -165,8 +173,8 @@ class EcosystemMonitor:
                         raise MonitorError(
                             f"Rate limit exceeded. Resets at: {e.reset_at}"
                         ) from e
-                    except GitHubAPIError:
-                        # Log error but continue with other repos
+                    except GitHubAPIError as e:
+                        logger.warning("Failed to scan %s: %s", repo_name, e)
                         health = RepoHealth(
                             name=repo_name,
                             full_name=repo_data["full_name"],
@@ -231,7 +239,8 @@ class EcosystemMonitor:
                         repo_data = await client.get_repository(repo_name)
                         health = await client.build_repo_health(repo_data)
                         summary.add_repo(health)
-                    except GitHubAPIError:
+                    except GitHubAPIError as e:
+                        logger.warning("Failed to scan %s: %s", repo_name, e)
                         health = RepoHealth(
                             name=repo_name,
                             full_name=f"{self.organization}/{repo_name}",
@@ -367,86 +376,9 @@ class EcosystemMonitor:
         if not self._summary:
             raise MonitorError("No scan data available. Run scan_all() first.")
 
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        from pulse.reporters import MarkdownReporter
 
-        lines = [
-            "# Ecosystem Health Report",
-            "",
-            f"**Organization:** {self._summary.organization}",
-            f"**Generated:** {self._summary.generated_at.strftime('%Y-%m-%d %H:%M:%S')}",
-            "",
-            "## Summary",
-            "",
-            "| Metric | Value |",
-            "|--------|-------|",
-            f"| Total Repositories | {self._summary.total_repos} |",
-            f"| Healthy | {self._summary.healthy_count} |",
-            f"| Warning | {self._summary.warning_count} |",
-            f"| Critical | {self._summary.critical_count} |",
-            f"| Average Score | {self._summary.average_score:.1f}/100 |",
-            f"| Total Stars | {self._summary.total_stars} |",
-            f"| Open Issues | {self._summary.total_open_issues} |",
-            f"| Vulnerabilities | {self._summary.total_vulnerabilities} |",
-            "",
-            "## Repository Details",
-            "",
-            "| Repository | Status | Score | Build | Vulns |",
-            "|------------|--------|-------|-------|-------|",
-        ]
-
-        for repo in sorted(self._summary.repos, key=lambda r: -r.score):
-            status_emoji = {
-                HealthStatus.HEALTHY: "🟢",
-                HealthStatus.WARNING: "🟡",
-                HealthStatus.CRITICAL: "🔴",
-                HealthStatus.UNKNOWN: "⚪",
-            }.get(repo.status, "⚪")
-
-            vulns = (
-                repo.vulnerability_report.total_alerts
-                if repo.vulnerability_report
-                else 0
-            )
-
-            lines.append(
-                f"| [{repo.name}]({repo.url}) | {status_emoji} {repo.status.value} | "
-                f"{repo.score:.0f} | {repo.latest_build.value} | {vulns} |"
-            )
-
-        # Add critical issues section
-        critical = self.get_critical_repos()
-        if critical:
-            lines.extend(
-                [
-                    "",
-                    "## Critical Issues",
-                    "",
-                ]
-            )
-            for repo in critical:
-                lines.append(f"- **{repo.name}**: Score {repo.score:.0f}/100")
-
-        # Add vulnerability section
-        vulnerable = self.get_vulnerable_repos()
-        if vulnerable:
-            lines.extend(
-                [
-                    "",
-                    "## Security Vulnerabilities",
-                    "",
-                ]
-            )
-            for repo in vulnerable:
-                if repo.vulnerability_report:
-                    vr = repo.vulnerability_report
-                    lines.append(
-                        f"- **{repo.name}**: {vr.total_alerts} alerts "
-                        f"({vr.critical_count} critical, {vr.high_count} high)"
-                    )
-
-        with open(path, "w") as f:
-            f.write("\n".join(lines))
+        MarkdownReporter().write(self._summary, path)
 
 
 def run_scan(
