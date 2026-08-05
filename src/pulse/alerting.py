@@ -151,13 +151,13 @@ class SlackChannel(AlertChannel):
         Returns:
             True if sent successfully.
         """
-        if not self.is_configured():
+        if not self.webhook_url:
             return False
 
         emoji = self.SEVERITY_EMOJI.get(event.severity, ":bell:")
         color = self.SEVERITY_COLORS.get(event.severity, "#808080")
 
-        payload = {
+        payload: dict[str, Any] = {
             "attachments": [
                 {
                     "color": color,
@@ -256,7 +256,7 @@ class WebhookChannel(AlertChannel):
         Returns:
             True if sent successfully.
         """
-        if not self.is_configured():
+        if not self.url:
             return False
 
         payload = event.to_dict()

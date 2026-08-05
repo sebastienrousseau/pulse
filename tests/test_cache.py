@@ -306,7 +306,7 @@ class TestCacheEntryAdvanced:
 
     def test_expires_at(self) -> None:
         """Test expires_at property."""
-        from datetime import datetime, timedelta
+        from datetime import timedelta
 
         entry = CacheEntry(key="test", data="value", ttl_seconds=3600)
         expected = entry.created_at + timedelta(seconds=3600)
@@ -624,8 +624,9 @@ class TestCacheWriteError:
 
     def test_set_write_error(self) -> None:
         """Test set with write error raises CacheError."""
-        from pulse.cache import CacheError
         from unittest.mock import patch
+
+        from pulse.cache import CacheError
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config = CacheConfig(enabled=True, directory=tmpdir)

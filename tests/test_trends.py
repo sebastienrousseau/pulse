@@ -347,10 +347,7 @@ class TestTrendAnalyzer:
         assert len(trends) > 0
 
         # Find score trend
-        score_trend = next(
-            (t for t in trends if t.metric_name == "Average Score"),
-            None
-        )
+        score_trend = next((t for t in trends if t.metric_name == "Average Score"), None)
         assert score_trend is not None
         assert score_trend.direction == "up"
 
@@ -377,10 +374,7 @@ class TestTrendAnalyzer:
         trends = analyzer.analyze_repo_trends("test-org", "test-repo", days=30)
 
         assert len(trends) > 0
-        score_trend = next(
-            (t for t in trends if t.metric_name == "Score"),
-            None
-        )
+        score_trend = next((t for t in trends if t.metric_name == "Score"), None)
         assert score_trend is not None
         assert score_trend.direction == "up"
 

@@ -206,9 +206,27 @@ class TestEcosystemMonitorFiltering:
         monitor = EcosystemMonitor()
         monitor.config.monitoring.languages = ["rust", "python"]
 
-        rust_repo = {"name": "rust-repo", "language": "Rust", "archived": False, "fork": False, "private": False}
-        python_repo = {"name": "py-repo", "language": "Python", "archived": False, "fork": False, "private": False}
-        go_repo = {"name": "go-repo", "language": "Go", "archived": False, "fork": False, "private": False}
+        rust_repo = {
+            "name": "rust-repo",
+            "language": "Rust",
+            "archived": False,
+            "fork": False,
+            "private": False,
+        }
+        python_repo = {
+            "name": "py-repo",
+            "language": "Python",
+            "archived": False,
+            "fork": False,
+            "private": False,
+        }
+        go_repo = {
+            "name": "go-repo",
+            "language": "Go",
+            "archived": False,
+            "fork": False,
+            "private": False,
+        }
 
         assert monitor._should_include_repo(rust_repo) is True
         assert monitor._should_include_repo(python_repo) is True
@@ -219,7 +237,13 @@ class TestEcosystemMonitorFiltering:
         monitor = EcosystemMonitor()
         monitor.config.monitoring.languages = ["rust"]
 
-        repo_data = {"name": "repo", "language": None, "archived": False, "fork": False, "private": False}
+        repo_data = {
+            "name": "repo",
+            "language": None,
+            "archived": False,
+            "fork": False,
+            "private": False,
+        }
         assert monitor._should_include_repo(repo_data) is True
 
     def test_should_include_archived_when_enabled(self) -> None:
@@ -272,9 +296,7 @@ class TestEcosystemMonitorScan:
         )
 
     @pytest.mark.asyncio
-    async def test_scan_all_success(
-        self, mock_repos: list[dict], mock_health: RepoHealth
-    ) -> None:
+    async def test_scan_all_success(self, mock_repos: list[dict], mock_health: RepoHealth) -> None:
         """Test successful scan_all."""
         monitor = EcosystemMonitor()
 
@@ -319,9 +341,7 @@ class TestEcosystemMonitorScan:
         with patch("pulse.monitor.GitHubClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.get_repositories = AsyncMock(return_value=mock_repos)
-            mock_client.build_repo_health = AsyncMock(
-                side_effect=RateLimitExceeded(datetime.now())
-            )
+            mock_client.build_repo_health = AsyncMock(side_effect=RateLimitExceeded(datetime.now()))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
             mock_client_cls.return_value = mock_client
@@ -331,9 +351,7 @@ class TestEcosystemMonitorScan:
             assert "rate limit" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
-    async def test_scan_all_api_error_continues(
-        self, mock_repos: list[dict]
-    ) -> None:
+    async def test_scan_all_api_error_continues(self, mock_repos: list[dict]) -> None:
         """Test scan_all continues after single repo API error."""
         monitor = EcosystemMonitor()
         good_health = RepoHealth(
@@ -368,9 +386,7 @@ class TestEcosystemMonitorScan:
 
         with patch("pulse.monitor.GitHubClient") as mock_client_cls:
             mock_client = AsyncMock()
-            mock_client.get_repositories = AsyncMock(
-                side_effect=RateLimitExceeded(datetime.now())
-            )
+            mock_client.get_repositories = AsyncMock(side_effect=RateLimitExceeded(datetime.now()))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
             mock_client_cls.return_value = mock_client
@@ -385,9 +401,7 @@ class TestEcosystemMonitorScan:
 
         with patch("pulse.monitor.GitHubClient") as mock_client_cls:
             mock_client = AsyncMock()
-            mock_client.get_repositories = AsyncMock(
-                side_effect=GitHubAPIError("Error", 500)
-            )
+            mock_client.get_repositories = AsyncMock(side_effect=GitHubAPIError("Error", 500))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
             mock_client_cls.return_value = mock_client
@@ -420,9 +434,7 @@ class TestEcosystemMonitorScan:
 
         with patch("pulse.monitor.GitHubClient") as mock_client_cls:
             mock_client = AsyncMock()
-            mock_client.get_repository = AsyncMock(
-                side_effect=GitHubAPIError("Not found", 404)
-            )
+            mock_client.get_repository = AsyncMock(side_effect=GitHubAPIError("Not found", 404))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock(return_value=None)
             mock_client_cls.return_value = mock_client
@@ -456,7 +468,10 @@ class TestEcosystemMonitorScan:
         with patch("pulse.monitor.GitHubClient") as mock_client_cls:
             mock_client = AsyncMock()
             mock_client.get_repository = AsyncMock(
-                side_effect=[GitHubAPIError("Error", 500), {"name": "repo2", "full_name": "org/repo2"}]
+                side_effect=[
+                    GitHubAPIError("Error", 500),
+                    {"name": "repo2", "full_name": "org/repo2"},
+                ]
             )
             mock_client.build_repo_health = AsyncMock(return_value=mock_health)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -722,7 +737,9 @@ class TestEcosystemMonitorExport:
             assert "test-org" in content
             assert "test-repo" in content
 
-    def test_export_markdown_creates_directory(self, monitor_with_summary: EcosystemMonitor) -> None:
+    def test_export_markdown_creates_directory(
+        self, monitor_with_summary: EcosystemMonitor
+    ) -> None:
         """Test Markdown export creates parent directory."""
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "nested" / "dir" / "report.md"
@@ -739,7 +756,9 @@ class TestEcosystemMonitorExport:
             with pytest.raises(MonitorError):
                 monitor.export_markdown(path)
 
-    def test_export_markdown_includes_critical(self, monitor_with_summary: EcosystemMonitor) -> None:
+    def test_export_markdown_includes_critical(
+        self, monitor_with_summary: EcosystemMonitor
+    ) -> None:
         """Test Markdown export includes critical issues section."""
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "report.md"
@@ -749,7 +768,9 @@ class TestEcosystemMonitorExport:
             assert "Critical Issues" in content
             assert "critical-repo" in content
 
-    def test_export_markdown_includes_vulnerabilities(self, monitor_with_summary: EcosystemMonitor) -> None:
+    def test_export_markdown_includes_vulnerabilities(
+        self, monitor_with_summary: EcosystemMonitor
+    ) -> None:
         """Test Markdown export includes vulnerabilities section."""
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "report.md"

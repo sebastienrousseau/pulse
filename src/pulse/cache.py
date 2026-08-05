@@ -11,7 +11,7 @@ import json
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar, cast
 
 from pulse.config import CacheConfig
 
@@ -371,7 +371,7 @@ class ResponseCache:
         # Check cache first
         cached = self.get(key)
         if cached is not None:
-            return cached
+            return cast(T, cached)
 
         # Fetch fresh data
         data = fetch_fn()

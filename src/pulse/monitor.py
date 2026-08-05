@@ -60,9 +60,7 @@ class EcosystemMonitor:
         """Get the latest scan summary."""
         return self._summary
 
-    def set_progress_callback(
-        self, callback: Callable[[str, int, int], None]
-    ) -> None:
+    def set_progress_callback(self, callback: Callable[[str, int, int], None]) -> None:
         """Set progress callback for scan updates.
 
         Args:
@@ -121,7 +119,7 @@ class EcosystemMonitor:
         # Check language filter
         if monitoring.languages:
             repo_lang = (repo_data.get("language") or "").lower()
-            if repo_lang and repo_lang not in [l.lower() for l in monitoring.languages]:
+            if repo_lang and repo_lang not in [lang.lower() for lang in monitoring.languages]:
                 return False
 
         return True
@@ -162,9 +160,7 @@ class EcosystemMonitor:
                         health = await client.build_repo_health(repo_data)
                         summary.add_repo(health)
                     except RateLimitExceeded as e:
-                        raise MonitorError(
-                            f"Rate limit exceeded. Resets at: {e.reset_at}"
-                        ) from e
+                        raise MonitorError(f"Rate limit exceeded. Resets at: {e.reset_at}") from e
                     except GitHubAPIError:
                         # Log error but continue with other repos
                         health = RepoHealth(
@@ -179,9 +175,7 @@ class EcosystemMonitor:
                 return summary
 
         except RateLimitExceeded as e:
-            raise MonitorError(
-                f"GitHub rate limit exceeded. Resets at: {e.reset_at}"
-            ) from e
+            raise MonitorError(f"GitHub rate limit exceeded. Resets at: {e.reset_at}") from e
         except GitHubAPIError as e:
             raise MonitorError(f"GitHub API error: {e}") from e
 
@@ -241,9 +235,7 @@ class EcosystemMonitor:
                         summary.add_repo(health)
 
         except RateLimitExceeded as e:
-            raise MonitorError(
-                f"GitHub rate limit exceeded. Resets at: {e.reset_at}"
-            ) from e
+            raise MonitorError(f"GitHub rate limit exceeded. Resets at: {e.reset_at}") from e
 
         self._summary = summary
         return summary
@@ -292,9 +284,7 @@ class EcosystemMonitor:
             return []
         from pulse.models import BuildStatus
 
-        return [
-            r for r in self._summary.repos if r.latest_build == BuildStatus.FAILING
-        ]
+        return [r for r in self._summary.repos if r.latest_build == BuildStatus.FAILING]
 
     def get_stale_repos(self, days: int = 90) -> list[RepoHealth]:
         """Get repositories with no recent commits.
@@ -341,14 +331,10 @@ class EcosystemMonitor:
                     "stars": r.metrics.stars,
                     "open_issues": r.metrics.open_issues,
                     "vulnerabilities": (
-                        r.vulnerability_report.total_alerts
-                        if r.vulnerability_report
-                        else 0
+                        r.vulnerability_report.total_alerts if r.vulnerability_report else 0
                     ),
                     "critical_vulns": (
-                        r.vulnerability_report.critical_count
-                        if r.vulnerability_report
-                        else 0
+                        r.vulnerability_report.critical_count if r.vulnerability_report else 0
                     ),
                 }
                 for r in self._summary.repos
@@ -403,11 +389,7 @@ class EcosystemMonitor:
                 HealthStatus.UNKNOWN: "⚪",
             }.get(repo.status, "⚪")
 
-            vulns = (
-                repo.vulnerability_report.total_alerts
-                if repo.vulnerability_report
-                else 0
-            )
+            vulns = repo.vulnerability_report.total_alerts if repo.vulnerability_report else 0
 
             lines.append(
                 f"| [{repo.name}]({repo.url}) | {status_emoji} {repo.status.value} | "
