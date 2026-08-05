@@ -258,10 +258,15 @@ class TestGitHubClient:
         page2 = [{"name": f"repo{i}"} for i in range(100, 150)]
 
         with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
-            mock_request.side_effect = [page1, page2]
+            # get_repositories() probes the org endpoint before paginating, so the
+            # first response is consumed by that probe and discarded.
+            probe = [{"name": "probe"}]
+            mock_request.side_effect = [probe, page1, page2]
 
             result = await client.get_repositories()
             assert len(result) == 150
+            # probe + two pages
+            assert mock_request.await_count == 3
 
     @pytest.mark.asyncio
     async def test_get_repositories_empty(self, client: GitHubClient) -> None:
