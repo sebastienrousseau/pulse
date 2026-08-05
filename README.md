@@ -62,6 +62,7 @@ pulse dashboard --serve
 import asyncio
 from pulse import EcosystemMonitor, PulseConfig
 
+
 async def main():
     config = PulseConfig.load()
 
@@ -76,6 +77,7 @@ async def main():
         # Get repos needing attention
         for repo in monitor.get_repos_needing_attention():
             print(f"  - {repo.name}: {repo.score:.0f}/100")
+
 
 asyncio.run(main())
 ```
