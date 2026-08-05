@@ -109,15 +109,21 @@ def scan(
                     summary = await monitor.scan_all()
                 except MonitorError as e:
                     console.print(f"[red]Error:[/red] {e}")
-                    raise typer.Exit(1)
+                    raise typer.Exit(1) from e
 
                 progress.update(task, description="Scan complete!")
 
         # Display summary
         console.print()
-        _print_summary(summary.organization, summary.total_repos, summary.healthy_count,
-                      summary.warning_count, summary.critical_count, summary.average_score,
-                      summary.total_vulnerabilities)
+        _print_summary(
+            summary.organization,
+            summary.total_repos,
+            summary.healthy_count,
+            summary.warning_count,
+            summary.critical_count,
+            summary.average_score,
+            summary.total_vulnerabilities,
+        )
 
         # Export if requested
         if output:
@@ -159,8 +165,10 @@ def _print_summary(
     table.add_row("Vulnerabilities", f"[red]{vulns}[/red]" if vulns > 0 else "0")
 
     health_pct = (healthy / total * 100) if total > 0 else 0
-    status = "[green]Good[/green]" if health_pct >= 80 else (
-        "[yellow]Needs Attention[/yellow]" if health_pct >= 50 else "[red]Critical[/red]"
+    status = (
+        "[green]Good[/green]"
+        if health_pct >= 80
+        else ("[yellow]Needs Attention[/yellow]" if health_pct >= 50 else "[red]Critical[/red]")
     )
     table.add_row("Overall Status", status)
 
@@ -193,7 +201,7 @@ def repo(
                     health = await monitor.scan_repo(name)
                 except MonitorError as e:
                     console.print(f"[red]Error:[/red] {e}")
-                    raise typer.Exit(1)
+                    raise typer.Exit(1) from e
 
         # Display results
         status_color = {
@@ -288,7 +296,7 @@ def dashboard(
                     summary = await monitor.scan_all()
                 except MonitorError as e:
                     console.print(f"[red]Error:[/red] {e}")
-                    raise typer.Exit(1)
+                    raise typer.Exit(1) from e
 
         generator = DashboardGenerator(pulse_config)
         path = generator.generate(summary, output)
@@ -368,7 +376,7 @@ def status(
                     summary = await monitor.scan_all()
                 except MonitorError as e:
                     console.print(f"[red]Error:[/red] {e}")
-                    raise typer.Exit(1)
+                    raise typer.Exit(1) from e
 
         # Simple one-line status
         health_pct = summary.health_percentage

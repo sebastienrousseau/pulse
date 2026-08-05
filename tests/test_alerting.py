@@ -710,8 +710,9 @@ class TestEmailChannel:
     @pytest.mark.asyncio
     async def test_send_success(self) -> None:
         """Test successful email send."""
-        from pulse.alerting import EmailChannel
         from unittest.mock import MagicMock, patch
+
+        from pulse.alerting import EmailChannel
 
         channel = EmailChannel(
             smtp_host="smtp.example.com",
@@ -741,8 +742,9 @@ class TestEmailChannel:
     @pytest.mark.asyncio
     async def test_send_with_repo(self) -> None:
         """Test email send with repo info."""
-        from pulse.alerting import EmailChannel
         from unittest.mock import MagicMock, patch
+
+        from pulse.alerting import EmailChannel
 
         channel = EmailChannel(
             recipients=["admin@example.com"],
@@ -776,8 +778,9 @@ class TestEmailChannel:
     async def test_send_smtp_error(self) -> None:
         """Test email send with SMTP error."""
         import smtplib
-        from pulse.alerting import EmailChannel
         from unittest.mock import patch
+
+        from pulse.alerting import EmailChannel
 
         channel = EmailChannel(recipients=["admin@example.com"])
 
@@ -795,8 +798,9 @@ class TestEmailChannel:
     @pytest.mark.asyncio
     async def test_send_os_error(self) -> None:
         """Test email send with OS error."""
-        from pulse.alerting import EmailChannel
         from unittest.mock import patch
+
+        from pulse.alerting import EmailChannel
 
         channel = EmailChannel(recipients=["admin@example.com"])
 
@@ -814,8 +818,9 @@ class TestEmailChannel:
     @pytest.mark.asyncio
     async def test_send_without_auth(self) -> None:
         """Test email send without authentication."""
-        from pulse.alerting import EmailChannel
         from unittest.mock import MagicMock, patch
+
+        from pulse.alerting import EmailChannel
 
         channel = EmailChannel(
             smtp_host="localhost",

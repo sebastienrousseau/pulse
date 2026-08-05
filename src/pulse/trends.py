@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import statistics
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -481,7 +482,7 @@ class TrendAnalyzer:
     def _analyze_metric(
         self,
         name: str,
-        values: list[float | int],
+        values: Sequence[float],
         period_days: int,
     ) -> TrendAnalysis | None:
         """Analyze a single metric's trend.

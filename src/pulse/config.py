@@ -18,9 +18,7 @@ class GitHubConfig(BaseModel):
     organization: str = Field(
         default="sebastienrousseau", description="GitHub organization to monitor"
     )
-    rate_limit_buffer: int = Field(
-        default=100, description="Buffer to maintain before rate limit"
-    )
+    rate_limit_buffer: int = Field(default=100, description="Buffer to maintain before rate limit")
 
 
 class MonitoringConfig(BaseModel):
@@ -51,9 +49,7 @@ class AlertConfig(BaseModel):
 class DashboardConfig(BaseModel):
     """Dashboard configuration."""
 
-    output_dir: Path = Field(
-        default=Path("./dashboard"), description="Dashboard output directory"
-    )
+    output_dir: Path = Field(default=Path("./dashboard"), description="Dashboard output directory")
     template_dir: Path | None = Field(default=None, description="Custom template directory")
     theme: str = Field(default="dark", description="Dashboard theme (dark/light)")
     refresh_interval_seconds: int = Field(

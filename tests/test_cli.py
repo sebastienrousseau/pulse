@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from typer.testing import CliRunner
 
-from pulse.cli import app, _print_summary, version_callback
+from pulse.cli import _print_summary, app, version_callback
 from pulse.models import (
     BuildStatus,
     EcosystemSummary,
@@ -19,7 +19,6 @@ from pulse.models import (
     RepoMetrics,
     VulnerabilityReport,
 )
-
 
 runner = CliRunner()
 
@@ -114,7 +113,7 @@ class TestInitCommand:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "pulse.yaml"
             config_path.write_text("existing: config\n")
-            result = runner.invoke(app, ["init", "--path", str(config_path)], input="n\n")
+            runner.invoke(app, ["init", "--path", str(config_path)], input="n\n")
             # Exit code can be 0 or 1 depending on typer version, but file should be unchanged
             # File should remain unchanged
             assert config_path.read_text() == "existing: config\n"

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import tempfile
-from datetime import datetime
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -471,7 +470,7 @@ class TestDashboardWithDifferentStatuses:
             Language.OTHER,
         ]
 
-        for i, lang in enumerate(languages):
+        for lang in languages:
             repo = RepoHealth(
                 name=f"repo-{lang.value}",
                 full_name=f"test-org/repo-{lang.value}",

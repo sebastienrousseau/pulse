@@ -80,7 +80,26 @@ select = [
     "ARG",    # flake8-unused-arguments
     "SIM",    # flake8-simplify
 ]
-ignore = ["E501"]
+ignore = [
+    "E501",
+    # Typer resolves parameter annotations at runtime via get_type_hints().
+    # Under target-version py39 the PEP 604 form this rule wants (`X | None`)
+    # raises TypeError when that string annotation is evaluated, even with
+    # `from __future__ import annotations`. Optional[...] has to stay until
+    # the supported floor is 3.10+.
+    "UP045",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# Calling typer.Option()/typer.Argument() in a parameter default is the
+# required Typer idiom, not the mutable-default bug B008 targets.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]
+
+[tool.ruff.lint.per-file-ignores]
+# ARG: pytest fixtures are declared as parameters even when the body does not
+# reference them. SIM117: collapsing the nested `with` blocks needs
+# parenthesized context managers (3.10+) to stay inside line-length 100.
+"tests/**" = ["ARG001", "ARG002", "SIM117"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["pulse"]

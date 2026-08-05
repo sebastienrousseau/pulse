@@ -107,6 +107,7 @@ class TestGitHubClient:
     async def test_ensure_client_without_token(self) -> None:
         """Test _ensure_client without token."""
         import os
+
         # Temporarily clear env vars
         old_tokens = {}
         for var in ["GITHUB_TOKEN", "GH_TOKEN", "PULSE_GITHUB_TOKEN"]:
@@ -526,9 +527,7 @@ class TestBuildRepoHealth:
         }
 
     @pytest.mark.asyncio
-    async def test_build_repo_health_basic(
-        self, client: GitHubClient, repo_data: dict
-    ) -> None:
+    async def test_build_repo_health_basic(self, client: GitHubClient, repo_data: dict) -> None:
         """Test building basic repo health."""
         with patch.multiple(
             client,
@@ -557,7 +556,7 @@ class TestBuildRepoHealth:
                 "author": {
                     "date": "2024-01-15T10:30:00Z",
                 }
-            }
+            },
         }
 
         with patch.multiple(
@@ -615,9 +614,7 @@ class TestBuildRepoHealth:
                     "cve_id": "CVE-2024-0001",
                     "references": [{"url": "https://example.com"}],
                 },
-                "security_vulnerability": {
-                    "first_patched_version": {"identifier": "2.32.0"}
-                },
+                "security_vulnerability": {"first_patched_version": {"identifier": "2.32.0"}},
                 "created_at": "2024-01-01T00:00:00Z",
             }
         ]
@@ -662,41 +659,41 @@ class TestBuildRepoHealth:
         license_file = {"name": "LICENSE", "type": "file"}
         workflows = {"name": ".github/workflows", "type": "dir"}
 
-        with patch.multiple(
-            client,
-            get_latest_commit=AsyncMock(return_value=None),
-            get_workflow_runs=AsyncMock(return_value=[]),
-            get_vulnerability_alerts=AsyncMock(return_value=[]),
-            get_releases=AsyncMock(return_value=[]),
+        with (
+            patch.multiple(
+                client,
+                get_latest_commit=AsyncMock(return_value=None),
+                get_workflow_runs=AsyncMock(return_value=[]),
+                get_vulnerability_alerts=AsyncMock(return_value=[]),
+                get_releases=AsyncMock(return_value=[]),
+            ),
+            patch.object(client, "get_contents", new_callable=AsyncMock) as mock_contents,
         ):
-            with patch.object(
-                client, "get_contents", new_callable=AsyncMock
-            ) as mock_contents:
-                mock_contents.side_effect = [
-                    None,  # commit data
-                    [],  # workflow runs
-                    [],  # alerts
-                    [],  # releases
-                    readme,  # README.md
-                    license_file,  # LICENSE
-                    workflows,  # .github/workflows
-                ]
+            mock_contents.side_effect = [
+                None,  # commit data
+                [],  # workflow runs
+                [],  # alerts
+                [],  # releases
+                readme,  # README.md
+                license_file,  # LICENSE
+                workflows,  # .github/workflows
+            ]
 
-                # Use a simpler approach - mock the specific calls
-                async def mock_get_contents(repo: str, path: str) -> dict | None:
-                    if "README" in path:
-                        return readme
-                    if "LICENSE" in path:
-                        return license_file
-                    if "workflows" in path:
-                        return workflows
-                    return None
+            # Use a simpler approach - mock the specific calls
+            async def mock_get_contents(repo: str, path: str) -> dict | None:
+                if "README" in path:
+                    return readme
+                if "LICENSE" in path:
+                    return license_file
+                if "workflows" in path:
+                    return workflows
+                return None
 
-                with patch.object(client, "get_contents", side_effect=mock_get_contents):
-                    health = await client.build_repo_health(repo_data)
-                    assert health.has_readme is True
-                    assert health.has_license is True
-                    assert health.has_ci is True
+            with patch.object(client, "get_contents", side_effect=mock_get_contents):
+                health = await client.build_repo_health(repo_data)
+                assert health.has_readme is True
+                assert health.has_license is True
+                assert health.has_ci is True
 
     @pytest.mark.asyncio
     async def test_build_repo_health_score_healthy(
@@ -705,12 +702,12 @@ class TestBuildRepoHealth:
         """Test building repo health results in healthy status."""
         with patch.multiple(
             client,
-            get_latest_commit=AsyncMock(return_value={
-                "commit": {"author": {"date": datetime.now().isoformat()}}
-            }),
-            get_workflow_runs=AsyncMock(return_value=[
-                {"name": "CI", "status": "completed", "conclusion": "success"}
-            ]),
+            get_latest_commit=AsyncMock(
+                return_value={"commit": {"author": {"date": datetime.now().isoformat()}}}
+            ),
+            get_workflow_runs=AsyncMock(
+                return_value=[{"name": "CI", "status": "completed", "conclusion": "success"}]
+            ),
             get_vulnerability_alerts=AsyncMock(return_value=[]),
             get_releases=AsyncMock(return_value=[]),
             get_contents=AsyncMock(return_value={"type": "file"}),

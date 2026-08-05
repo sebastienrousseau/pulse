@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -104,9 +104,7 @@ class GitHubClient:
         if reset:
             self._rate_limit_reset = datetime.fromtimestamp(int(reset))
 
-    async def _request(
-        self, method: str, path: str, **kwargs: Any
-    ) -> dict[str, Any] | list[Any]:
+    async def _request(self, method: str, path: str, **kwargs: Any) -> dict[str, Any] | list[Any]:
         """Make API request with rate limit handling.
 
         Args:
@@ -144,7 +142,7 @@ class GitHubClient:
                 response.status_code,
             )
 
-        return response.json()
+        return cast("dict[str, Any] | list[Any]", response.json())
 
     async def get_repositories(self) -> list[dict[str, Any]]:
         """Get all repositories for the organization or user.
@@ -208,7 +206,9 @@ class GitHubClient:
         assert isinstance(data, dict)
         return data
 
-    async def get_latest_commit(self, repo_name: str, branch: str = "main") -> dict[str, Any] | None:
+    async def get_latest_commit(
+        self, repo_name: str, branch: str = "main"
+    ) -> dict[str, Any] | None:
         """Get latest commit on a branch.
 
         Args:
@@ -220,17 +220,13 @@ class GitHubClient:
         """
         org = self.config.github.organization
         try:
-            data = await self._request(
-                "GET", f"/repos/{org}/{repo_name}/commits/{branch}"
-            )
+            data = await self._request("GET", f"/repos/{org}/{repo_name}/commits/{branch}")
             assert isinstance(data, dict)
             return data
         except GitHubAPIError:
             return None
 
-    async def get_workflow_runs(
-        self, repo_name: str, limit: int = 10
-    ) -> list[dict[str, Any]]:
+    async def get_workflow_runs(self, repo_name: str, limit: int = 10) -> list[dict[str, Any]]:
         """Get recent workflow runs.
 
         Args:
@@ -248,7 +244,7 @@ class GitHubClient:
                 params={"per_page": limit},
             )
             assert isinstance(data, dict)
-            return data.get("workflow_runs", [])
+            return cast("list[dict[str, Any]]", data.get("workflow_runs", []))
         except GitHubAPIError:
             return []
 
@@ -409,9 +405,7 @@ class GitHubClient:
             for run in workflow_runs:
                 ci_status = CIStatus(
                     workflow_name=run.get("name", "Unknown"),
-                    status=self._map_build_status(
-                        run.get("status"), run.get("conclusion")
-                    ),
+                    status=self._map_build_status(run.get("status"), run.get("conclusion")),
                     conclusion=run.get("conclusion"),
                     run_url=run.get("html_url"),
                     started_at=self._parse_datetime(run.get("run_started_at")),
@@ -465,9 +459,7 @@ class GitHubClient:
         # Process releases
         releases_data = results[3]
         if isinstance(releases_data, list) and releases_data:
-            health.last_release = self._parse_datetime(
-                releases_data[0].get("published_at")
-            )
+            health.last_release = self._parse_datetime(releases_data[0].get("published_at"))
 
         # Check for documentation/quality files
         health.has_readme = results[4] is not None and not isinstance(results[4], Exception)
