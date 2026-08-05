@@ -60,25 +60,17 @@ class TestPulseConfig:
         finally:
             del os.environ["GITHUB_TOKEN"]
 
-    def test_get_github_token_none(self) -> None:
+    def test_get_github_token_none(self, no_ambient_github_token: None) -> None:
         """Test getting token when not configured."""
         config = PulseConfig()
         config.github.token = None
 
-        # Ensure env vars are not set
-        for var in ["GITHUB_TOKEN", "GH_TOKEN", "PULSE_GITHUB_TOKEN"]:
-            os.environ.pop(var, None)
-
         assert config.get_github_token() is None
 
-    def test_validate_github_config(self) -> None:
+    def test_validate_github_config(self, no_ambient_github_token: None) -> None:
         """Test GitHub config validation."""
         config = PulseConfig()
         config.github.token = None
-
-        # Clear env vars
-        for var in ["GITHUB_TOKEN", "GH_TOKEN", "PULSE_GITHUB_TOKEN"]:
-            os.environ.pop(var, None)
 
         assert config.validate_github_config() is False
 
