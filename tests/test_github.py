@@ -104,28 +104,15 @@ class TestGitHubClient:
         await client.close()
 
     @pytest.mark.asyncio
-    async def test_ensure_client_without_token(self) -> None:
+    async def test_ensure_client_without_token(self, no_ambient_github_token: None) -> None:
         """Test _ensure_client without token."""
-        import os
+        config = PulseConfig()
+        config.github.token = None
+        client = GitHubClient(config)
 
-        # Temporarily clear env vars
-        old_tokens = {}
-        for var in ["GITHUB_TOKEN", "GH_TOKEN", "PULSE_GITHUB_TOKEN"]:
-            old_tokens[var] = os.environ.pop(var, None)
-
-        try:
-            config = PulseConfig()
-            config.github.token = None
-            client = GitHubClient(config)
-
-            http_client = await client._ensure_client()
-            assert "Authorization" not in http_client.headers
-            await client.close()
-        finally:
-            # Restore env vars
-            for var, val in old_tokens.items():
-                if val is not None:
-                    os.environ[var] = val
+        http_client = await client._ensure_client()
+        assert "Authorization" not in http_client.headers
+        await client.close()
 
     def test_update_rate_limit(self, client: GitHubClient) -> None:
         """Test rate limit update from response headers."""
