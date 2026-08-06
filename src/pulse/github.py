@@ -60,6 +60,8 @@ class GitHubClient:
         self._client: httpx.AsyncClient | None = None
         self._rate_limit_remaining: int = 5000
         self._rate_limit_reset: datetime | None = None
+        # Whether the account is an org or a user cannot change within a run.
+        self._repos_endpoint_cache: str | None = None
 
     async def __aenter__(self) -> GitHubClient:
         """Enter async context."""
@@ -144,6 +146,29 @@ class GitHubClient:
 
         return cast("dict[str, Any] | list[Any]", response.json())
 
+    async def _repos_endpoint(self, org: str) -> str:
+        """Return the repos endpoint for an org or user account.
+
+        The answer cannot change within a run, so it is probed once and
+        cached. Previously every call spent an extra round trip re-asking,
+        which also made the pagination logic depend on a request that
+        contributes nothing to the result.
+        """
+        if self._repos_endpoint_cache is not None:
+            return self._repos_endpoint_cache
+
+        endpoint = f"/orgs/{org}/repos"
+        try:
+            await self._request("GET", endpoint, params={"per_page": 1})
+        except GitHubAPIError as e:
+            if e.status_code != 404:
+                raise
+            # Not an organization; the account is a user.
+            endpoint = f"/users/{org}/repos"
+
+        self._repos_endpoint_cache = endpoint
+        return endpoint
+
     async def get_repositories(self) -> list[dict[str, Any]]:
         """Get all repositories for the organization or user.
 
@@ -157,16 +182,7 @@ class GitHubClient:
         page = 1
         per_page = 100
 
-        # Try org endpoint first, fall back to user endpoint
-        endpoint = f"/orgs/{org}/repos"
-        try:
-            await self._request("GET", endpoint, params={"per_page": 1})
-        except GitHubAPIError as e:
-            if e.status_code == 404:
-                # Not an org, try user endpoint
-                endpoint = f"/users/{org}/repos"
-            else:
-                raise
+        endpoint = await self._repos_endpoint(org)
 
         while True:
             data = await self._request(

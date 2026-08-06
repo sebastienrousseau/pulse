@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -50,24 +49,24 @@ def main(
 
 @app.command()
 def scan(
-    org: Optional[str] = typer.Option(
+    org: str | None = typer.Option(
         None,
         "--org",
         "-o",
         help="GitHub organization to scan.",
     ),
-    config: Optional[Path] = typer.Option(
+    config: Path | None = typer.Option(
         None,
         "--config",
         "-c",
         help="Path to config file.",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         help="Output JSON file path.",
     ),
-    markdown: Optional[Path] = typer.Option(
+    markdown: Path | None = typer.Option(
         None,
         "--markdown",
         "-m",
@@ -79,7 +78,7 @@ def scan(
         "-d",
         help="Generate HTML dashboard.",
     ),
-    dashboard_dir: Optional[Path] = typer.Option(
+    dashboard_dir: Path | None = typer.Option(
         None,
         "--dashboard-dir",
         help="Dashboard output directory.",
@@ -178,13 +177,13 @@ def _print_summary(
 @app.command()
 def repo(
     name: str = typer.Argument(..., help="Repository name to scan."),
-    org: Optional[str] = typer.Option(
+    org: str | None = typer.Option(
         None,
         "--org",
         "-o",
         help="GitHub organization.",
     ),
-    config: Optional[Path] = typer.Option(
+    config: Path | None = typer.Option(
         None,
         "--config",
         "-c",
@@ -254,19 +253,19 @@ def repo(
 
 @app.command()
 def dashboard(
-    config: Optional[Path] = typer.Option(
+    config: Path | None = typer.Option(
         None,
         "--config",
         "-c",
         help="Path to config file.",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
         help="Dashboard output directory.",
     ),
-    org: Optional[str] = typer.Option(
+    org: str | None = typer.Option(
         None,
         "--org",
         help="GitHub organization.",
@@ -330,7 +329,7 @@ def dashboard(
 
 @app.command()
 def init(
-    path: Optional[Path] = typer.Option(
+    path: Path | None = typer.Option(
         None,
         "--path",
         "-p",
@@ -353,13 +352,13 @@ def init(
 
 @app.command()
 def status(
-    org: Optional[str] = typer.Option(
+    org: str | None = typer.Option(
         None,
         "--org",
         "-o",
         help="GitHub organization.",
     ),
-    config: Optional[Path] = typer.Option(
+    config: Path | None = typer.Option(
         None,
         "--config",
         "-c",

@@ -256,6 +256,38 @@ class TestGitHubClient:
             assert mock_request.await_count == 3
 
     @pytest.mark.asyncio
+    async def test_the_org_probe_runs_once_across_calls(self, client: GitHubClient) -> None:
+        """Whether the account is an org cannot change within a run."""
+        with patch.object(client, "_request", new_callable=AsyncMock) as req:
+            req.side_effect = [[{"name": "probe"}], [], []]
+
+            await client.get_repositories()
+            first_call_count = req.await_count
+            await client.get_repositories()
+
+        # Probe + one page on the first call; only a page on the second.
+        assert first_call_count == 2
+        assert req.await_count == 3
+
+    @pytest.mark.asyncio
+    async def test_a_user_account_falls_back_and_caches_that_too(
+        self, client: GitHubClient
+    ) -> None:
+        with patch.object(client, "_request", new_callable=AsyncMock) as req:
+            req.side_effect = [
+                GitHubAPIError("not an org", status_code=404),
+                [],
+                [],
+            ]
+
+            await client.get_repositories()
+            await client.get_repositories()
+
+        assert client._repos_endpoint_cache.startswith("/users/")
+        # Failed probe + page, then page only - no second probe.
+        assert req.await_count == 3
+
+    @pytest.mark.asyncio
     async def test_get_repositories_empty(self, client: GitHubClient) -> None:
         """Test getting empty repositories list."""
         with patch.object(client, "_request", new_callable=AsyncMock) as mock_request:
