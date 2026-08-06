@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class HealthStatus(str, Enum):
+class HealthStatus(StrEnum):
     """Repository health status levels."""
 
     HEALTHY = "healthy"
@@ -18,7 +18,7 @@ class HealthStatus(str, Enum):
     UNKNOWN = "unknown"
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     """Security vulnerability severity levels."""
 
     CRITICAL = "critical"
@@ -28,7 +28,7 @@ class Severity(str, Enum):
     INFO = "info"
 
 
-class Language(str, Enum):
+class Language(StrEnum):
     """Supported programming languages."""
 
     RUST = "rust"
@@ -40,7 +40,7 @@ class Language(str, Enum):
     OTHER = "other"
 
 
-class BuildStatus(str, Enum):
+class BuildStatus(StrEnum):
     """CI/CD build status."""
 
     PASSING = "passing"
