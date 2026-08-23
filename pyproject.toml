@@ -7,7 +7,7 @@ name = "pulse"
 version = "0.0.1"
 description = "Ecosystem monitoring and health dashboard for the Sebastien Rousseau repository ecosystem"
 authors = [{name = "Sebastien Rousseau", email = "sebastian.rousseau@gmail.com"}]
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0 OR MIT"
 readme = "README.md"
 requires-python = ">=3.11"
 keywords = ["monitoring", "ecosystem", "health", "dashboard", "github"]
